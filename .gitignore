@@ -1,9 +1,10 @@
 # =============================================================================
-# shiftLK-web — Next.js Frontend .gitignore
+# ShiftLK Monorepo Root .gitignore
 # =============================================================================
 
 # Dependencies
 node_modules/
+*/node_modules/
 .pnp
 .pnp.*
 .yarn/*
@@ -12,36 +13,59 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
-# Next.js build output
-/.next/
-/out/
-/build/
-
-# Production bundles
+# Build outputs
+.next/
+*/.next/
 dist/
+*/dist/
+out/
+*/out/
+build/
+*/build/
 
-# TypeScript
+# TypeScript cache
 *.tsbuildinfo
+*/*.tsbuildinfo
 next-env.d.ts
+*/next-env.d.ts
 
-# Environment variables — keep .env.example, ignore all real env files
+# Environment variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-# Allow: .env.example is safe to commit
+*/.env
+*/.env.local
+*/.env.development.local
+*/.env.test.local
+*/.env.production.local
+!.env.example
+!*/.env.example
+
+# Prisma
+node_modules/.prisma/
+*/node_modules/.prisma/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+*/uploads/*
+!*/uploads/.gitkeep
 
 # Testing & coverage
 /coverage/
+*/coverage/
 /.nyc_output/
+*/.nyc_output/
 
-# Debug logs
+# Logs
+*.log
+*/logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-*.log
 
 # OS files
 .DS_Store
@@ -59,8 +83,9 @@ ehthumbs.db
 *.swo
 *~
 
-# Vercel deployment
+# Vercel
 .vercel/
+*/.vercel/
 
 # Misc
 *.pem
