@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-neon: #ccff00;
+  --color-brand-neon-hover: #b8e600;
+  --color-brand-neon-light: #e6ff66;
+  --color-brand-neon-muted: rgba(204, 255, 0, 0.12);
+  --color-brand-neon-glow: rgba(204, 255, 0, 0.35);
+  --color-brand-black: #05070a;
+  --color-brand-dark: #0a0d14;
+  --color-brand-surface: #0f1523;
+  --color-brand-card: #141c2e;
+  --color-brand-card-hover: #1a253d;
+  --color-brand-border: #212c42;
+  --color-brand-border-glow: rgba(204, 255, 0, 0.4);
+}
+
+@layer base {
+  :root {
+    --font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  body {
+    background-color: #06080d;
+    color: #f3f4f6;
+    font-family: var(--font-inter), var(--font-sinhala), var(--font-tamil), var(--font-fallback);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(204, 255, 0, 0.04) 0%, transparent 60%),
+      radial-gradient(circle at 100% 50%, rgba(37, 211, 102, 0.02) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  /* Language-specific font prioritisation */
+  :lang(si) {
+    font-family: var(--font-sinhala), var(--font-inter), var(--font-fallback);
+    line-height: 1.6;
+  }
+
+  :lang(ta) {
+    font-family: var(--font-tamil), var(--font-inter), var(--font-fallback);
+    line-height: 1.6;
+  }
+}
+
+/* Custom scrollbars & utilities */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090c13;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #232c3f;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ccff00;
+}
+
+/* Brand neon effects & animations */
+.neon-glow {
+  box-shadow: 0 0 25px rgba(204, 255, 0, 0.35);
+}
+
+.neon-glow-sm {
+  box-shadow: 0 0 12px rgba(204, 255, 0, 0.22);
+}
+
+.neon-text-glow {
+  text-shadow: 0 0 12px rgba(204, 255, 0, 0.6);
+}
+
+.neon-border-hover:hover {
+  border-color: #ccff00;
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.25);
+}
+
+.badge-neon {
+  background: rgba(204, 255, 0, 0.12);
+  color: #ccff00;
+  border: 1px solid rgba(204, 255, 0, 0.35);
+}
+
+.btn-neon {
+  background-color: #ccff00;
+  color: #000000;
+  font-weight: 800;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-neon:hover {
+  background-color: #b8e600;
+  box-shadow: 0 0 20px rgba(204, 255, 0, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Subtle pulse animation */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s infinite ease-in-out;
+}
+
