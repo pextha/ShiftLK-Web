@@ -1,23 +1,23 @@
 import { DeliveryZone } from '@/lib/db/schema.types';
 import { SEED_DELIVERY_ZONES } from '@/lib/db/seed-data';
-import { isSupabaseConfigured, supabase } from '@/lib/db/supabase';
+import { apiClient } from '@/lib/api/client';
 
 export async function getDeliveryZones(): Promise<DeliveryZone[]> {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('delivery_zones')
-        .select('*')
-        .eq('is_active', true)
-        .order('province', { ascending: true })
-        .order('district', { ascending: true });
-
-      if (!error && data && data.length > 0) {
-        return data as DeliveryZone[];
-      }
-    } catch (e) {
-      console.warn('Failed to fetch delivery zones from Supabase, using seed data', e);
+  try {
+    const zones = await apiClient.getDeliveryZones();
+    if (zones && zones.length > 0) {
+      return zones.map((z) => ({
+        id: z.id,
+        district: z.district,
+        province: z.province,
+        base_fee: z.base_fee,
+        extra_per_kg: z.extra_per_kg,
+        estimated_days: z.estimated_days,
+        is_active: true,
+      }));
     }
+  } catch (err) {
+    console.warn('ShiftLK API getDeliveryZones failed, falling back to local seed data:', err);
   }
 
   return SEED_DELIVERY_ZONES;

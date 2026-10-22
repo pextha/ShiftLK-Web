@@ -58,7 +58,7 @@ export default async function ProductsPage({
 
   // Filter options
   const categories = await getAllCategories(appLocale);
-  const brands = getAllBrands();
+  const brands = await getAllBrands();
   const makesAndModels = getAllMakesAndModels();
 
   // Execute query

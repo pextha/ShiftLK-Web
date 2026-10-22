@@ -397,7 +397,7 @@ export default async function HomePage({ params }: HomePageProps) {
               Polgasowita Motorbike Hub
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Direct access to Sri Lanka's leading motorbike network in Polgasowita, specializing in genuine Indian bike spares (Bajaj, Yamaha), custom modification parts, body stickers, and helmets.
+              Direct access to Sri Lanka&apos;s leading motorbike network in Polgasowita, specializing in genuine Indian bike spares (Bajaj, Yamaha), custom modification parts, body stickers, and helmets.
             </p>
           </div>
 

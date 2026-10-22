@@ -266,7 +266,7 @@ export default function ProductFilterBar({
           <span className="text-slate-400">Active filters:</span>
           {q && (
             <span className="bg-slate-900 text-slate-200 border border-brand-neon/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
-              Search: "{q}"
+              Search: &quot;{q}&quot;
               <button
                 onClick={() => updateParam('q', null)}
                 className="hover:text-brand-neon"

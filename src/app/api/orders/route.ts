@@ -25,10 +25,11 @@ export async function POST(req: NextRequest) {
       whatsAppUrl: result.whatsAppUrl,
       whatsAppMessage: result.whatsAppMessage,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Order creation API error:', err);
+    const message = err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: message },
       { status: 500 }
     );
   }

@@ -1,6 +1,6 @@
 import { AppLocale, ConditionType, LocalizedProduct } from '@/lib/db/schema.types';
 import { SEED_CATEGORIES, SEED_RAW_PRODUCTS } from '@/lib/db/seed-data';
-import { isSupabaseConfigured, supabase } from '@/lib/db/supabase';
+import { apiClient } from '@/lib/api/client';
 
 export interface ProductFilterOptions {
   query?: string;
@@ -28,7 +28,7 @@ function localizeProduct(
 
   const trans = raw.translations[locale] || raw.translations.en;
 
-  // IMPORTANT: Notice cost_price is NOT included in the returned LocalizedProduct object!
+  // IMPORTANT: cost_price is NOT included in LocalizedProduct
   return {
     id: raw.id,
     slug: raw.slug,
@@ -58,104 +58,65 @@ export async function getProducts(
   locale: AppLocale = 'en',
   filters: ProductFilterOptions = {}
 ): Promise<LocalizedProduct[]> {
-  // If Supabase is configured, we can query Supabase
-  if (isSupabaseConfigured && supabase) {
-    try {
-      let query = supabase
-        .from('products')
-        .select(`
-          id,
-          slug,
-          part_number,
-          brand,
-          category_id,
-          condition,
-          selling_price,
-          stock_qty,
-          weight_kg,
-          is_active,
-          images,
-          created_at,
-          updated_at,
-          categories (slug, category_translations (language, name)),
-          product_translations (language, name, description),
-          vehicle_compatibility (id, make, model, year_from, year_to, chassis_code)
-        `)
-        .eq('is_active', true);
+  try {
+    const apiRes = await apiClient.getProducts({
+      query: filters.query,
+      category: filters.categorySlug,
+      brand: filters.brand,
+      condition: filters.condition,
+      make: filters.make,
+      model: filters.model,
+      year: filters.year,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
+      inStockOnly: filters.inStockOnly,
+      sortBy: filters.sortBy,
+      locale,
+    });
 
-      if (filters.condition && filters.condition !== 'all') {
-        query = query.eq('condition', filters.condition);
-      }
-      if (filters.inStockOnly) {
-        query = query.gt('stock_qty', 0);
-      }
-      if (filters.minPrice !== undefined) {
-        query = query.gte('selling_price', filters.minPrice);
-      }
-      if (filters.maxPrice !== undefined) {
-        query = query.lte('selling_price', filters.maxPrice);
-      }
-
-      if (filters.sortBy === 'price_asc') {
-        query = query.order('selling_price', { ascending: true });
-      } else if (filters.sortBy === 'price_desc') {
-        query = query.order('selling_price', { ascending: false });
-      } else {
-        query = query.order('created_at', { ascending: false });
-      }
-
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        // Map Supabase rows to LocalizedProduct
-        return data.map((item: any) => {
-          const trans =
-            item.product_translations?.find((t: any) => t.language === locale) ||
-            item.product_translations?.find((t: any) => t.language === 'en') ||
-            {};
-          const catTrans =
-            item.categories?.category_translations?.find(
-              (ct: any) => ct.language === locale
-            ) ||
-            item.categories?.category_translations?.find(
-              (ct: any) => ct.language === 'en'
-            );
-
-          return {
-            id: item.id,
-            slug: item.slug,
-            part_number: item.part_number,
-            brand: item.brand,
-            category_id: item.category_id,
-            category_slug: item.categories?.slug,
-            category_name: catTrans?.name || 'Spare Parts',
-            condition: item.condition,
-            selling_price: Number(item.selling_price),
-            stock_qty: item.stock_qty,
-            weight_kg: Number(item.weight_kg),
-            is_active: item.is_active,
-            images: item.images || [],
-            name: trans.name || item.slug,
-            description: trans.description || '',
-            compatibility: item.vehicle_compatibility || [],
-            translations: {
-              en: item.product_translations?.find((t: any) => t.language === 'en') || { name: '', description: '' },
-              si: item.product_translations?.find((t: any) => t.language === 'si') || { name: '', description: '' },
-              ta: item.product_translations?.find((t: any) => t.language === 'ta') || { name: '', description: '' },
-            },
-          };
-        });
-      }
-    } catch (e) {
-      console.warn('Supabase query failed, falling back to seed repository', e);
+    if (apiRes && apiRes.items && apiRes.items.length > 0) {
+      return apiRes.items.map((item) => ({
+        id: item.id,
+        slug: item.slug,
+        part_number: item.part_number,
+        brand: item.brand,
+        category_id: item.category?.id || '',
+        category_slug: item.category?.slug,
+        category_name: item.category?.name || 'Spare Parts',
+        condition: item.condition,
+        selling_price: item.selling_price,
+        stock_qty: item.stock_qty,
+        weight_kg: item.weight_kg,
+        is_active: item.is_active,
+        images: item.images,
+        name: item.name,
+        description: item.description,
+        compatibility: (item.compatibility || []).map((c, i) => ({
+          id: `${item.id}-c-${i}`,
+          product_id: item.id,
+          make: c.make,
+          model: c.model,
+          year_from: c.year_from,
+          year_to: c.year_to,
+          chassis_code: c.chassis_code || undefined,
+        })),
+        translations: {
+          en: { name: item.name, description: item.description },
+          si: { name: item.name, description: item.description },
+          ta: { name: item.name, description: item.description },
+        },
+      }));
     }
+  } catch (err) {
+    console.warn('ShiftLK API getProducts failed, using local seed data fallback:', err);
   }
 
-  // Fallback to high-performance local seed data
+  // Built-in seed data fallback
   let list = SEED_RAW_PRODUCTS.filter((p) => p.is_active).map((p) =>
     localizeProduct(p, locale)
   );
 
-  // Filter: Query (part number, brand, title, description, model)
+  // Filter: Query
   if (filters.query && filters.query.trim()) {
     const q = filters.query.toLowerCase().trim();
     list = list.filter((p) => {
@@ -191,9 +152,7 @@ export async function getProducts(
   // Filter: Vehicle Make & Model
   if (filters.make && filters.make !== 'all') {
     list = list.filter((p) =>
-      p.compatibility.some(
-        (c) => c.make.toLowerCase() === filters.make?.toLowerCase()
-      )
+      p.compatibility.some((c) => c.make.toLowerCase() === filters.make?.toLowerCase())
     );
   }
 
@@ -205,13 +164,14 @@ export async function getProducts(
     );
   }
 
+  // Filter: Year
   if (filters.year) {
+    const targetYear = filters.year;
     list = list.filter((p) =>
-      p.compatibility.some((c) => {
-        const matchesFrom = c.year_from <= filters.year!;
-        const matchesTo = !c.year_to || c.year_to >= filters.year!;
-        return matchesFrom && matchesTo;
-      })
+      p.compatibility.some(
+        (c) =>
+          c.year_from <= targetYear && (!c.year_to || c.year_to >= targetYear)
+      )
     );
   }
 
@@ -234,7 +194,6 @@ export async function getProducts(
   } else if (filters.sortBy === 'price_desc') {
     list.sort((a, b) => b.selling_price - a.selling_price);
   } else {
-    // Newest
     list.sort((a, b) => b.id.localeCompare(a.id));
   }
 
@@ -245,6 +204,45 @@ export async function getProductBySlug(
   slug: string,
   locale: AppLocale = 'en'
 ): Promise<LocalizedProduct | null> {
+  try {
+    const item = await apiClient.getProductBySlug(slug, locale);
+    if (item) {
+      return {
+        id: item.id,
+        slug: item.slug,
+        part_number: item.part_number,
+        brand: item.brand,
+        category_id: item.category?.id || '',
+        category_slug: item.category?.slug,
+        category_name: item.category?.name || 'Spare Parts',
+        condition: item.condition,
+        selling_price: item.selling_price,
+        stock_qty: item.stock_qty,
+        weight_kg: item.weight_kg,
+        is_active: item.is_active,
+        images: item.images,
+        name: item.name,
+        description: item.description,
+        compatibility: (item.compatibility || []).map((c, i) => ({
+          id: `${item.id}-c-${i}`,
+          product_id: item.id,
+          make: c.make,
+          model: c.model,
+          year_from: c.year_from,
+          year_to: c.year_to,
+          chassis_code: c.chassis_code || undefined,
+        })),
+        translations: {
+          en: { name: item.name, description: item.description },
+          si: { name: item.name, description: item.description },
+          ta: { name: item.name, description: item.description },
+        },
+      };
+    }
+  } catch (err) {
+    console.warn(`ShiftLK API getProductBySlug(${slug}) failed, falling back to local seed data:`, err);
+  }
+
   const raw = SEED_RAW_PRODUCTS.find((p) => p.slug === slug && p.is_active);
   if (!raw) return null;
   return localizeProduct(raw, locale);
@@ -259,6 +257,21 @@ export async function getFeaturedProducts(
 }
 
 export async function getAllCategories(locale: AppLocale = 'en') {
+  try {
+    const cats = await apiClient.getCategories();
+    if (cats && cats.length > 0) {
+      return cats.map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        icon: c.icon,
+        name: c.translations?.[locale]?.name || c.name,
+        description: c.translations?.[locale]?.description || c.description,
+      }));
+    }
+  } catch (err) {
+    console.warn('ShiftLK API getCategories failed, falling back to local seed data:', err);
+  }
+
   return SEED_CATEGORIES.map((c) => ({
     id: c.id,
     slug: c.slug,
@@ -328,14 +341,12 @@ export const SHIFTLK_SUPPORTED_BIKES: SupportedBikeBrand[] = [
 ];
 
 export function getAllMakesAndModels(): { make: string; models: string[] }[] {
-  // Pre-seeded with Bajaj, Honda, and Yamaha
   const makeMap = new Map<string, Set<string>>();
 
   SHIFTLK_SUPPORTED_BIKES.forEach((b) => {
     makeMap.set(b.make, new Set(b.models));
   });
 
-  // Also include any models present in current active products
   SEED_RAW_PRODUCTS.forEach((p) => {
     p.compatibility.forEach((c) => {
       if (!makeMap.has(c.make)) {
@@ -348,7 +359,6 @@ export function getAllMakesAndModels(): { make: string; models: string[] }[] {
   const priorityOrder = ['Bajaj', 'Honda', 'Yamaha'];
   const makes: { make: string; models: string[] }[] = [];
 
-  // Add priority brands in exact requested order
   priorityOrder.forEach((makeName) => {
     if (makeMap.has(makeName)) {
       makes.push({
@@ -359,7 +369,6 @@ export function getAllMakesAndModels(): { make: string; models: string[] }[] {
     }
   });
 
-  // Add any remaining makes alphabetically
   makeMap.forEach((models, make) => {
     makes.push({
       make,
@@ -370,7 +379,16 @@ export function getAllMakesAndModels(): { make: string; models: string[] }[] {
   return makes;
 }
 
-export function getAllBrands() {
+export async function getAllBrands(): Promise<string[]> {
+  try {
+    const brands = await apiClient.getBrands();
+    if (brands && brands.length > 0) {
+      return brands.map((b) => b.name).sort();
+    }
+  } catch (err) {
+    console.warn('ShiftLK API getBrands failed, falling back to local seed data:', err);
+  }
+
   const brands = Array.from(new Set(SEED_RAW_PRODUCTS.map((p) => p.brand)));
   return brands.sort();
 }

@@ -43,13 +43,14 @@ Instead of an online payment gateway, customer checkout is orchestrated through 
      - Price range and In-Stock only filter
      - Sorting (Newest, Price: Low to High, Price: High to Low)
 
-5. **Future-Proof Database Architecture (Supabase / PostgreSQL)**
-   - Full SQL schema in `supabase/schema.sql` and seed migration in `supabase/seed.sql`.
-   - Ready for admin panel integration without any schema rewrites:
-     - `cost_price` column in `products` (strictly hidden from public customer API).
+5. **Separate Backend API (`shiftLK-api` — MySQL + Prisma)**
+   - All database and business logic lives in the standalone `../shiftLK-api` project; this frontend holds no DB code or secrets.
+   - Schema, migrations and seed data live in `shiftLK-api/prisma/`.
+   - Admin-ready data model:
+     - `cost_price` column in `products` (never returned by public API endpoints — enforced by public DTO serializers).
      - `unit_cost` snapshot in `order_items` for historical profit tracking.
      - `expenses` table for admin operational expenses, salaries, shipping, and utility tracking.
-     - Row Level Security (RLS) policies preventing public exposure of private cost figures or administrative orders.
+   - Until the frontend is wired to the API (Phase 4), the site runs on the built-in seed data in `src/lib/db/seed-data.ts`.
 
 6. **SEO & Performance**
    - Server-rendered pages with metadata and Open Graph tags for rich WhatsApp and Facebook link previews.
@@ -107,8 +108,7 @@ shiftLK-web/
 │   ├── lib/
 │   │   ├── db/
 │   │   │   ├── schema.types.ts     # TypeScript database and entity types
-│   │   │   ├── seed-data.ts        # 12 sample spare parts, 3 categories, 25 districts
-│   │   │   └── supabase.ts         # Supabase client connector
+│   │   │   └── seed-data.ts        # 12 sample spare parts, categories, 25 districts (dev fallback)
 │   │   └── utils/
 │   │       ├── currency.ts         # Sri Lankan Rupee (LKR / රු. / ரூ.) formatter
 │   │       ├── phone-validator.ts  # Sri Lankan phone format validator (07X / +94)
@@ -118,9 +118,6 @@ shiftLK-web/
 │       ├── productService.ts       # Product retrieval and filtering logic
 │       ├── deliveryService.ts      # District delivery fee calculation
 │       └── orderService.ts         # Order creation & code generation (SLK-000124)
-├── supabase/
-│   ├── schema.sql                  # PostgreSQL / Supabase table definitions and RLS policies
-│   └── seed.sql                    # Initial seed data for products, categories, and districts
 ├── .env.example                    # Environment variable template
 ├── .env.local                      # Local development environment configuration
 └── package.json
@@ -147,20 +144,16 @@ Copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-Edit `.env.local` to configure your WhatsApp number and optional Supabase credentials:
+Edit `.env.local` to configure your site URL and WhatsApp number:
 ```env
 # Public Site URL
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # WhatsApp Business Number (country code 94 without + or spaces)
 NEXT_PUBLIC_WHATSAPP_NUMBER=94770871018
-
-# Optional: Supabase Database Configuration
-# The application runs out of the box with the built-in seed database if left unconfigured.
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
+
+> The frontend has no database credentials. Phase 4 adds `NEXT_PUBLIC_API_URL` pointing at `shiftLK-api`.
 
 ### 4. Running the Development Server
 ```bash
@@ -174,23 +167,14 @@ npm run build
 npm run start
 ```
 
----
-
-## Supabase Database Setup (When connecting Supabase)
-
-1. Create a new project in [Supabase](https://supabase.com).
-2. Go to the **SQL Editor** in your Supabase dashboard.
-3. Run the SQL script located at `supabase/schema.sql` to generate all tables, enums, triggers, and Row Level Security (RLS) policies.
-4. Run the SQL script located at `supabase/seed.sql` to insert the 12 sample spare parts, 3 categories, and 25 districts.
-5. Copy your **Project URL** and **Anon API Key** into `.env.local`.
 
 ---
 
 ## How Admin Panel Will Plug In
 
-When you build the admin panel later:
-- **Authentication**: Connect Supabase Auth (`authenticated` role).
-- **Security & RLS**: The public customer side only reads active products and never receives `cost_price`. The admin panel using authenticated credentials or service role key has full read/write access to `cost_price`, `stock_qty`, and the `expenses` table.
-- **Stock Confirmation**: When the customer orders via WhatsApp, the order status is set to `pending` and stock is untouched. In the admin panel, clicking **"Confirm Order"** updates the order status to `confirmed` and executes a decrement on `stock_qty`.
+The admin panel talks to the `shiftLK-api` admin endpoints (`/api/v1/admin/**`):
+- **Authentication**: JWT (httpOnly cookie + refresh token) with `admin` / `staff` roles, handled by `shiftLK-api`.
+- **Data privacy**: Public endpoints only return active products through public serializers and never include `cost_price`. Admin endpoints have full access to `cost_price`, `stock_qty`, and the `expenses` table.
+- **Stock Confirmation**: When the customer orders via WhatsApp, the order status is set to `pending` and stock is untouched. Clicking **"Confirm Order"** in the admin panel runs a single DB transaction that locks the product rows, checks stock, decrements `stock_qty`, and sets the status to `confirmed`.
 - **Profit Analytics**: `order_items` stores both `unit_price` and `unit_cost` snapshots at order time, enabling automated gross profit reports: `Gross Profit = (unit_price - unit_cost) * qty`.
 - **Expense Tracking**: The `expenses` table is pre-structured with categories (`inventory`, `shipping`, `salary`, `utility`, `rent`, `marketing`, `other`) for complete net profit reporting.

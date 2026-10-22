@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { Search, X, Wrench, ArrowRight } from 'lucide-react';
@@ -17,11 +17,13 @@ export default function StickySearchBar({
   const t = useTranslations('search');
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
+  const [prevInitialQuery, setPrevInitialQuery] = useState(initialQuery);
   const [isFocused, setIsFocused] = useState(false);
 
-  useEffect(() => {
+  if (initialQuery !== prevInitialQuery) {
+    setPrevInitialQuery(initialQuery);
     setQuery(initialQuery);
-  }, [initialQuery]);
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

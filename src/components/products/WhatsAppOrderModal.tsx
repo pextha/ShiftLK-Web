@@ -138,9 +138,10 @@ export default function WhatsAppOrderModal({
       if (typeof window !== 'undefined' && data.whatsAppUrl) {
         window.open(data.whatsAppUrl, '_blank');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Order creation error:', err);
-      setGeneralError(err.message || 'Error creating order. Please try again.');
+      const message = err instanceof Error ? err.message : 'Error creating order. Please try again.';
+      setGeneralError(message);
     } finally {
       setIsSubmitting(false);
     }

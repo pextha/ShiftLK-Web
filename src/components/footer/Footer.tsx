@@ -81,7 +81,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Sri Lanka's dedicated motorbike spare parts destination. Specializing in Indian bike spares (Bajaj, Yamaha), custom modifications, body stickers, and helmets in Polgasowita.
+              Sri Lanka&apos;s dedicated motorbike spare parts destination. Specializing in Indian bike spares (Bajaj, Yamaha), custom modifications, body stickers, and helmets in Polgasowita.
             </p>
             <div className="inline-flex items-center gap-2 bg-[#ccff00]/10 border border-[#ccff00]/25 px-2.5 py-1 rounded-lg text-[10px] font-black text-[#ccff00] tracking-wider uppercase">
               Precious Parts For Every Ride
