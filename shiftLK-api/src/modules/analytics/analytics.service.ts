@@ -147,6 +147,232 @@ export class AnalyticsService {
       costPrice: Number(p.costPrice),
     }));
   }
+
+  async getReports(options: {
+    period?: 'daily' | 'weekly' | 'monthly' | 'custom';
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const period = options.period || 'monthly';
+    const now = new Date();
+
+    let fromDate: Date;
+    let toDate: Date = new Date();
+
+    if (period === 'daily') {
+      fromDate = new Date();
+      fromDate.setHours(0, 0, 0, 0);
+    } else if (period === 'weekly') {
+      fromDate = new Date();
+      fromDate.setDate(now.getDate() - 7);
+      fromDate.setHours(0, 0, 0, 0);
+    } else if (period === 'monthly') {
+      fromDate = new Date();
+      fromDate.setDate(now.getDate() - 30);
+      fromDate.setHours(0, 0, 0, 0);
+    } else if (options.startDate && options.endDate) {
+      fromDate = new Date(options.startDate);
+      toDate = new Date(options.endDate);
+      toDate.setHours(23, 59, 59, 999);
+    } else {
+      fromDate = new Date();
+      fromDate.setDate(now.getDate() - 30);
+    }
+
+    const allOrdersInRange = await prisma.order.findMany({
+      where: {
+        createdAt: { gte: fromDate, lte: toDate },
+      },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                slug: true,
+                partNumber: true,
+                translations: { where: { language: 'en' }, select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const statusCounts: Record<string, number> = {
+      PENDING: 0,
+      CONFIRMED: 0,
+      SHIPPED: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+    };
+    for (const o of allOrdersInRange) {
+      statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+    }
+
+    const validOrders = allOrdersInRange.filter((o) =>
+      ['CONFIRMED', 'SHIPPED', 'DELIVERED'].includes(o.status)
+    );
+
+    const expenses = await prisma.expense.findMany({
+      where: {
+        date: { gte: fromDate, lte: toDate },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    let totalRevenue = 0;
+    let totalCogs = 0;
+    let totalDeliveryFees = 0;
+    let totalItemsSold = 0;
+
+    const productSalesMap: Record<
+      string,
+      {
+        id: string;
+        name: string;
+        partNumber: string;
+        unitsSold: number;
+        revenue: number;
+        cost: number;
+        profit: number;
+      }
+    > = {};
+
+    const districtMap: Record<string, { district: string; orderCount: number; totalSpent: number }> = {};
+    const dailyMap: Record<
+      string,
+      {
+        date: string;
+        ordersCount: number;
+        revenue: number;
+        cogs: number;
+        grossProfit: number;
+        expenses: number;
+        netProfit: number;
+      }
+    > = {};
+
+    for (const o of validOrders) {
+      totalDeliveryFees += Number(o.deliveryCost);
+      const dayKey = o.createdAt.toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
+
+      if (!dailyMap[dayKey]) {
+        dailyMap[dayKey] = {
+          date: dayKey,
+          ordersCount: 0,
+          revenue: 0,
+          cogs: 0,
+          grossProfit: 0,
+          expenses: 0,
+          netProfit: 0,
+        };
+      }
+      dailyMap[dayKey].ordersCount++;
+
+      if (!districtMap[o.district]) {
+        districtMap[o.district] = { district: o.district, orderCount: 0, totalSpent: 0 };
+      }
+      districtMap[o.district].orderCount++;
+      districtMap[o.district].totalSpent += Number(o.subtotal);
+
+      for (const item of o.items) {
+        const itemRevenue = Number(item.unitPrice) * item.qty;
+        const itemCost = Number(item.unitCost) * item.qty;
+        const itemProfit = itemRevenue - itemCost;
+
+        totalRevenue += itemRevenue;
+        totalCogs += itemCost;
+        totalItemsSold += item.qty;
+
+        dailyMap[dayKey].revenue += itemRevenue;
+        dailyMap[dayKey].cogs += itemCost;
+        dailyMap[dayKey].grossProfit += itemProfit;
+
+        const pId = item.productId;
+        if (!productSalesMap[pId]) {
+          productSalesMap[pId] = {
+            id: pId,
+            name: item.product?.translations[0]?.name || item.product?.slug || 'Unknown',
+            partNumber: item.product?.partNumber || '',
+            unitsSold: 0,
+            revenue: 0,
+            cost: 0,
+            profit: 0,
+          };
+        }
+        productSalesMap[pId].unitsSold += item.qty;
+        productSalesMap[pId].revenue += itemRevenue;
+        productSalesMap[pId].cost += itemCost;
+        productSalesMap[pId].profit += itemProfit;
+      }
+    }
+
+    let totalExpensesAmount = 0;
+    for (const exp of expenses) {
+      const expAmount = Number(exp.amount);
+      totalExpensesAmount += expAmount;
+      const dayKey = exp.date.toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
+      if (!dailyMap[dayKey]) {
+        dailyMap[dayKey] = {
+          date: dayKey,
+          ordersCount: 0,
+          revenue: 0,
+          cogs: 0,
+          grossProfit: 0,
+          expenses: 0,
+          netProfit: 0,
+        };
+      }
+      dailyMap[dayKey].expenses += expAmount;
+    }
+
+    for (const d of Object.values(dailyMap)) {
+      d.netProfit = d.grossProfit - d.expenses;
+      d.revenue = Math.round(d.revenue);
+      d.cogs = Math.round(d.cogs);
+      d.grossProfit = Math.round(d.grossProfit);
+      d.expenses = Math.round(d.expenses);
+      d.netProfit = Math.round(d.netProfit);
+    }
+
+    const grossProfit = totalRevenue - totalCogs;
+    const netProfit = grossProfit - totalExpensesAmount;
+
+    const topSellingProducts = Object.values(productSalesMap)
+      .sort((a, b) => b.unitsSold - a.unitsSold)
+      .slice(0, 10);
+
+    const mostProfitableProducts = Object.values(productSalesMap)
+      .sort((a, b) => b.profit - a.profit)
+      .slice(0, 10);
+
+    const ordersByDistrict = Object.values(districtMap).sort((a, b) => b.orderCount - a.orderCount);
+
+    return {
+      period,
+      fromDate: fromDate.toISOString(),
+      toDate: toDate.toISOString(),
+      summary: {
+        totalOrders: validOrders.length,
+        statusCounts,
+        totalItemsSold,
+        revenue: Math.round(totalRevenue),
+        cogs: Math.round(totalCogs),
+        grossProfit: Math.round(grossProfit),
+        grossMarginPercent: totalRevenue > 0 ? Math.round(((grossProfit / totalRevenue) * 100) * 10) / 10 : 0,
+        deliveryFeesCollected: Math.round(totalDeliveryFees),
+        totalExpenses: Math.round(totalExpensesAmount),
+        netProfit: Math.round(netProfit),
+        netMarginPercent: totalRevenue > 0 ? Math.round(((netProfit / totalRevenue) * 100) * 10) / 10 : 0,
+      },
+      timeline: Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date)),
+      topSellingProducts,
+      mostProfitableProducts,
+      ordersByDistrict,
+    };
+  }
 }
 
 export const analyticsService = new AnalyticsService();

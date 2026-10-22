@@ -5,20 +5,60 @@ import { env } from '../../config/env';
 import { AppError } from '../../middlewares/errorHandler';
 import { AuthUserPayload } from '../../middlewares/auth';
 
+interface LockoutEntry {
+  attempts: number;
+  lockedUntil?: number;
+}
+
+const lockoutStore = new Map<string, LockoutEntry>();
+// Dummy hash to prevent timing attacks when email does not exist
+const DUMMY_HASH = '$2b$10$abcdefghijklmnopqrstuuabcdefghijklmnopqrstuuabcdefghijk';
+
 export class AuthService {
   async login(email: string, passwordPlain: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const now = Date.now();
+    const entry = lockoutStore.get(normalizedEmail);
+
+    if (entry && entry.lockedUntil && entry.lockedUntil > now) {
+      const remainingMinutes = Math.ceil((entry.lockedUntil - now) / (60 * 1000));
+      throw new AppError(
+        'ACCOUNT_LOCKED',
+        `Too many failed attempts. Please try again in ${remainingMinutes} minute(s).`,
+        429
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: normalizedEmail },
     });
 
-    if (!user || !user.isActive) {
+    const hashToCompare = user ? user.passwordHash : DUMMY_HASH;
+    const isMatch = await bcrypt.compare(passwordPlain, hashToCompare);
+
+    if (!user || !user.isActive || !isMatch || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
+      const currentAttempts = (entry?.attempts || 0) + 1;
+      let lockedUntil: number | undefined;
+
+      if (currentAttempts >= env.LOCKOUT_MAX_ATTEMPTS) {
+        lockedUntil = now + env.LOCKOUT_MINUTES * 60 * 1000;
+      }
+
+      lockoutStore.set(normalizedEmail, { attempts: currentAttempts, lockedUntil });
+
+      if (lockedUntil) {
+        throw new AppError(
+          'ACCOUNT_LOCKED',
+          `Too many failed attempts. Account temporarily locked for ${env.LOCKOUT_MINUTES} minutes.`,
+          429
+        );
+      }
+
       throw new AppError('INVALID_CREDENTIALS', 'Invalid email or password', 401);
     }
 
-    const isMatch = await bcrypt.compare(passwordPlain, user.passwordHash);
-    if (!isMatch) {
-      throw new AppError('INVALID_CREDENTIALS', 'Invalid email or password', 401);
-    }
+    // Reset lockout entry on successful authentication
+    lockoutStore.delete(normalizedEmail);
 
     const payload: AuthUserPayload = {
       id: user.id,
@@ -50,8 +90,8 @@ export class AuthService {
         where: { id: decoded.id },
       });
 
-      if (!user || !user.isActive) {
-        throw new AppError('USER_INACTIVE', 'User account is no longer active', 401);
+      if (!user || !user.isActive || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {
+        throw new AppError('USER_INACTIVE', 'User account is no longer active or permitted', 401);
       }
 
       const payload: AuthUserPayload = {
@@ -70,8 +110,32 @@ export class AuthService {
         accessToken,
       };
     } catch (err: any) {
+      if (err instanceof AppError) throw err;
       throw new AppError('INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired', 401);
     }
+  }
+
+  async changePassword(userId: string, currentPasswordPlain: string, newPasswordPlain: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError('USER_NOT_FOUND', 'User not found', 404);
+    }
+
+    const isMatch = await bcrypt.compare(currentPasswordPlain, user.passwordHash);
+    if (!isMatch) {
+      throw new AppError('INVALID_CREDENTIALS', 'Current password does not match', 400);
+    }
+
+    const newHash = await bcrypt.hash(newPasswordPlain, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newHash },
+    });
+
+    return { message: 'Password successfully updated' };
   }
 
   async getMe(userId: string) {

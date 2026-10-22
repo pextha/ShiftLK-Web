@@ -6,7 +6,7 @@ import { AppError } from './errorHandler';
 export interface AuthUserPayload {
   id: string;
   email: string;
-  role: 'SUPER_ADMIN' | 'ADMIN';
+  role: 'ADMIN' | 'STAFF' | 'SUPER_ADMIN';
   name: string;
 }
 
@@ -50,7 +50,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 }
 
-export function requireRole(allowedRoles: Array<'SUPER_ADMIN' | 'ADMIN'>) {
+export function requireRole(allowedRoles: Array<'ADMIN' | 'STAFF' | 'SUPER_ADMIN'>) {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       next(new AppError('UNAUTHORIZED', 'Authentication is required', 401));

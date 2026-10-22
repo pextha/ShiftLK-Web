@@ -1,28 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
-import { env } from '../../config/env';
+import { getCookieOptions, getClearCookieOptions } from '../../utils/cookies';
+import { auditService } from '../audit/audit.service';
 
-const COOKIE_OPTIONS_ACCESS = {
-  httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: 15 * 60 * 1000, // 15 mins
-};
-
-const COOKIE_OPTIONS_REFRESH = {
-  httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
+const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000; // 15 mins
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body;
     const result = await authService.login(email, password);
 
-    res.cookie('access_token', result.accessToken, COOKIE_OPTIONS_ACCESS);
-    res.cookie('refresh_token', result.refreshToken, COOKIE_OPTIONS_REFRESH);
+    res.cookie('access_token', result.accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
+    res.cookie('refresh_token', result.refreshToken, getCookieOptions(REFRESH_TOKEN_MAX_AGE));
+
+    // Audit log successful login
+    await auditService.log({
+      userId: result.user.id,
+      action: 'LOGIN_SUCCESS',
+      entityType: 'User',
+      entityId: result.user.id,
+      ipAddress: req.ip,
+    });
 
     res.json({
       data: {
@@ -30,7 +29,15 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         accessToken: result.accessToken,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    // Audit log failed login
+    await auditService.log({
+      action: 'LOGIN_FAILED',
+      entityType: 'User',
+      entityId: String(email || 'unknown'),
+      newValues: JSON.stringify({ message: error.message, code: error.code }),
+      ipAddress: req.ip,
+    });
     next(error);
   }
 }
@@ -49,7 +56,7 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
     }
 
     const result = await authService.refreshToken(token);
-    res.cookie('access_token', result.accessToken, COOKIE_OPTIONS_ACCESS);
+    res.cookie('access_token', result.accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
 
     res.json({
       data: {
@@ -63,14 +70,30 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
 }
 
 export async function logout(req: Request, res: Response): Promise<void> {
-  const clearOptions = {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-  };
+  const clearOptions = getClearCookieOptions();
   res.clearCookie('access_token', clearOptions);
   res.clearCookie('refresh_token', clearOptions);
   res.json({ data: { message: 'Successfully logged out' } });
+}
+
+export async function changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const { currentPassword, newPassword } = req.body;
+    const result = await authService.changePassword(userId, currentPassword, newPassword);
+
+    await auditService.log({
+      userId,
+      action: 'PASSWORD_CHANGED',
+      entityType: 'User',
+      entityId: userId,
+      ipAddress: req.ip,
+    });
+
+    res.json({ data: result });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {

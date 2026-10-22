@@ -7,7 +7,7 @@ import * as adminOrdersController from './admin.orders.controller';
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole(['SUPER_ADMIN', 'ADMIN']));
+router.use(requireRole(['SUPER_ADMIN', 'ADMIN', 'STAFF']));
 
 router.get('/', adminOrdersController.getAdminOrders);
 router.get('/:id', adminOrdersController.getAdminOrderById);

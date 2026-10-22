@@ -319,3 +319,340 @@ export async function deleteProduct(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function getAdminProductById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        brand: true,
+        translations: true,
+        images: { orderBy: { displayOrder: 'asc' } },
+        compatibilities: true,
+      },
+    });
+
+    if (!product) {
+      throw new AppError('PRODUCT_NOT_FOUND', 'Product not found', 404);
+    }
+
+    const selling = Number(product.sellingPrice);
+    const cost = Number(product.costPrice);
+    const margin = selling > 0 ? ((selling - cost) / selling) * 100 : 0;
+
+    res.json({
+      data: {
+        ...product,
+        sellingPrice: selling,
+        costPrice: cost,
+        profitMarginPercent: Math.round(margin * 10) / 10,
+        profitPerUnit: Math.round((selling - cost) * 100) / 100,
+        weightKg: Number(product.weightKg),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getStockOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        costPrice: true,
+        sellingPrice: true,
+        stockQty: true,
+        lowStockThreshold: true,
+      },
+    });
+
+    let totalProducts = products.length;
+    let totalUnits = 0;
+    let totalStockValueAtCost = 0;
+    let totalStockValueAtSelling = 0;
+    let outOfStockCount = 0;
+    let lowStockCount = 0;
+
+    for (const p of products) {
+      totalUnits += p.stockQty;
+      const cost = Number(p.costPrice);
+      const selling = Number(p.sellingPrice);
+      totalStockValueAtCost += cost * p.stockQty;
+      totalStockValueAtSelling += selling * p.stockQty;
+
+      if (p.stockQty <= 0) {
+        outOfStockCount++;
+      } else if (p.stockQty <= p.lowStockThreshold) {
+        lowStockCount++;
+      }
+    }
+
+    const expectedProfitIfAllSold = totalStockValueAtSelling - totalStockValueAtCost;
+
+    res.json({
+      data: {
+        totalProducts,
+        totalUnits,
+        totalStockValueAtCost: Math.round(totalStockValueAtCost),
+        totalStockValueAtSelling: Math.round(totalStockValueAtSelling),
+        expectedProfitIfAllSold: Math.round(expectedProfitIfAllSold),
+        outOfStockCount,
+        lowStockCount,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getStockMovements(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const productId = req.query.productId as string;
+    const reason = req.query.reason as string;
+
+    const where: any = {};
+    if (productId) where.productId = productId;
+    if (reason && reason !== 'all') where.reason = reason;
+
+    const [total, movements] = await Promise.all([
+      prisma.stockMovement.count({ where }),
+      prisma.stockMovement.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          product: {
+            select: {
+              id: true,
+              partNumber: true,
+              slug: true,
+              translations: { where: { language: 'en' }, select: { name: true } },
+            },
+          },
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      }),
+    ]);
+
+    res.json({
+      data: movements,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function restockProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { quantity, newCostPrice, note } = req.body;
+
+    const qty = Number(quantity);
+    if (!qty || qty <= 0) {
+      throw new AppError('INVALID_QUANTITY', 'Restock quantity must be greater than 0', 400);
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const prod = await tx.product.findUnique({ where: { id } });
+      if (!prod) {
+        throw new AppError('PRODUCT_NOT_FOUND', 'Product not found', 404);
+      }
+
+      const updateData: any = {
+        stockQty: { increment: qty },
+      };
+      if (newCostPrice !== undefined && newCostPrice !== null && Number(newCostPrice) >= 0) {
+        updateData.costPrice = Number(newCostPrice);
+      }
+
+      const product = await tx.product.update({
+        where: { id },
+        data: updateData,
+      });
+
+      await tx.stockMovement.create({
+        data: {
+          productId: id,
+          changeQty: qty,
+          reason: 'RESTOCK',
+          note: note || `Restocked ${qty} units${newCostPrice !== undefined ? ` at Rs. ${newCostPrice}` : ''}`,
+          userId: req.user?.id,
+        },
+      });
+
+      return product;
+    });
+
+    res.json({
+      data: {
+        id,
+        currentStock: updated.stockQty,
+        costPrice: Number(updated.costPrice),
+        message: 'Product successfully restocked',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function inlineStockAdjustment(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { newQty, delta, note } = req.body;
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const prod = await tx.product.findUnique({ where: { id } });
+      if (!prod) {
+        throw new AppError('PRODUCT_NOT_FOUND', 'Product not found', 404);
+      }
+
+      let targetStock: number;
+      let changeQty: number;
+
+      if (newQty !== undefined) {
+        targetStock = Number(newQty);
+        changeQty = targetStock - prod.stockQty;
+      } else if (delta !== undefined) {
+        changeQty = Number(delta);
+        targetStock = prod.stockQty + changeQty;
+      } else {
+        throw new AppError('INVALID_INPUT', 'Either newQty or delta must be provided', 400);
+      }
+
+      if (targetStock < 0) {
+        throw new AppError('INVALID_STOCK_LEVEL', 'Stock cannot be reduced below zero', 400);
+      }
+
+      const product = await tx.product.update({
+        where: { id },
+        data: { stockQty: targetStock },
+      });
+
+      if (changeQty !== 0) {
+        await tx.stockMovement.create({
+          data: {
+            productId: id,
+            changeQty,
+            reason: 'MANUAL_ADJUSTMENT',
+            note: note || `Inline stock update: ${prod.stockQty} -> ${targetStock}`,
+            userId: req.user?.id,
+          },
+        });
+      }
+
+      return product;
+    });
+
+    res.json({
+      data: {
+        id,
+        stockQty: updated.stockQty,
+        message: 'Stock updated',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function bulkProductsAction(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { action, productIds, stockAdjustment } = req.body;
+
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      throw new AppError('INVALID_IDS', 'productIds array is required', 400);
+    }
+
+    if (action === 'ACTIVATE') {
+      await prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { isActive: true },
+      });
+      res.json({ data: { message: `Activated ${productIds.length} products` } });
+      return;
+    }
+
+    if (action === 'DEACTIVATE') {
+      await prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { isActive: false },
+      });
+      res.json({ data: { message: `Deactivated ${productIds.length} products` } });
+      return;
+    }
+
+    if (action === 'UPDATE_STOCK' && stockAdjustment !== undefined) {
+      const delta = Number(stockAdjustment);
+      await prisma.$transaction(async (tx) => {
+        for (const pid of productIds) {
+          const prod = await tx.product.findUnique({ where: { id: pid } });
+          if (!prod) continue;
+          const newQty = Math.max(0, prod.stockQty + delta);
+          const change = newQty - prod.stockQty;
+          await tx.product.update({
+            where: { id: pid },
+            data: { stockQty: newQty },
+          });
+          if (change !== 0) {
+            await tx.stockMovement.create({
+              data: {
+                productId: pid,
+                changeQty: change,
+                reason: 'MANUAL_ADJUSTMENT',
+                note: `Bulk stock adjustment (${delta >= 0 ? '+' : ''}${delta})`,
+                userId: req.user?.id,
+              },
+            });
+          }
+        }
+      });
+      res.json({ data: { message: `Updated stock for ${productIds.length} products` } });
+      return;
+    }
+
+    throw new AppError('INVALID_ACTION', 'Action must be ACTIVATE, DEACTIVATE, or UPDATE_STOCK', 400);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function exportProductsCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const products = await prisma.product.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        category: { select: { slug: true } },
+        brand: { select: { name: true } },
+        translations: { where: { language: 'en' }, select: { name: true } },
+      },
+    });
+
+    const header = 'id,slug,partNumber,brand,category,condition,sellingPrice,costPrice,stockQty,lowStockThreshold,isActive,name_en\n';
+    const rows = products.map((p) => {
+      const name = (p.translations[0]?.name || '').replace(/"/g, '""');
+      return `"${p.id}","${p.slug}","${p.partNumber}","${p.brand.name}","${p.category.slug}","${p.condition}",${p.sellingPrice},${p.costPrice},${p.stockQty},${p.lowStockThreshold},${p.isActive},"${name}"`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="products_export.csv"');
+    res.send(header + rows.join('\n'));
+  } catch (error) {
+    next(error);
+  }
+}

@@ -198,6 +198,16 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
             item.qty,
             item.productId
           );
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              changeQty: -item.qty,
+              reason: 'ORDER_CONFIRMED',
+              note: `Order ${order.orderCode} confirmed`,
+              userId: req.user?.id,
+            },
+          });
         }
       }
 
@@ -210,6 +220,16 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
             item.qty,
             item.productId
           );
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              changeQty: item.qty,
+              reason: 'ORDER_CANCELLED',
+              note: `Order ${order.orderCode} cancelled, stock restored`,
+              userId: req.user?.id,
+            },
+          });
         }
       }
 

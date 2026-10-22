@@ -23,6 +23,8 @@ import adminOrdersRoutes from './modules/orders/admin.orders.routes';
 import adminExpensesRoutes from './modules/expenses/expenses.routes';
 import adminAnalyticsRoutes from './modules/analytics/analytics.routes';
 import adminAuditRoutes from './modules/audit/audit.routes';
+import adminUsersRoutes from './modules/users/users.routes';
+import adminSettingsRoutes from './modules/settings/settings.routes';
 
 const app = express();
 
@@ -31,12 +33,33 @@ app.use(helmet({
   contentSecurityPolicy: false, // Allows Swagger UI assets
 }));
 
+const allowedOrigins = [
+  env.FRONTEND_ORIGIN,
+  env.ADMIN_ORIGIN,
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [env.FRONTEND_ORIGIN, 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      try {
+        const url = new URL(origin);
+        if (url.hostname === 'shiftlk.lk' || url.hostname.endsWith('.shiftlk.lk')) {
+          return callback(null, true);
+        }
+      } catch {}
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
@@ -85,6 +108,8 @@ app.use('/api/v1/admin/orders', adminOrdersRoutes);
 app.use('/api/v1/admin/expenses', adminExpensesRoutes);
 app.use('/api/v1/admin/analytics', adminAnalyticsRoutes);
 app.use('/api/v1/admin/audit-logs', adminAuditRoutes);
+app.use('/api/v1/admin/users', adminUsersRoutes);
+app.use('/api/v1/admin/settings', adminSettingsRoutes);
 
 // 404 handler for unknown routes
 app.use((req: Request, res: Response, next) => {

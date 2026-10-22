@@ -39,3 +39,17 @@ export async function getLowStock(req: Request, res: Response, next: NextFunctio
     next(error);
   }
 }
+
+export async function getReports(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { period, startDate, endDate } = req.query;
+    const result = await analyticsService.getReports({
+      period: period as any,
+      startDate: startDate as string,
+      endDate: endDate as string,
+    });
+    res.json({ data: result });
+  } catch (error) {
+    next(error);
+  }
+}

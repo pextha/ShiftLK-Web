@@ -12,8 +12,10 @@ import {
   Truck,
   ShieldCheck,
   Flame,
+  Shield,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
+import AdminLoginModal from './AdminLoginModal';
 
 export default function Header() {
   const locale = useLocale();
@@ -21,6 +23,7 @@ export default function Header() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#06080d]/95 backdrop-blur-md border-b border-[#1c2436]">
@@ -131,6 +134,17 @@ export default function Header() {
             {/* Always-visible Language Switcher */}
             <LanguageSwitcher />
 
+            {/* Subtle Staff / Admin Portal Entry Icon */}
+            <button
+              type="button"
+              onClick={() => setAdminModalOpen(true)}
+              className="p-2 text-slate-400 hover:text-[#ccff00] hover:bg-[#0e1422] rounded-xl border border-[#212c42]/60 hover:border-[#ccff00]/40 transition-colors"
+              title="Staff & Admin Portal"
+              aria-label="Staff & Admin Portal"
+            >
+              <Shield className="w-4 h-4" />
+            </button>
+
             {/* Direct WhatsApp Hotline Button */}
             <a
               href="https://wa.me/94770871018"
@@ -216,7 +230,7 @@ export default function Header() {
             </Link>
           </div>
 
-          <div className="pt-2 border-t border-[#1c2436]">
+          <div className="pt-2 border-t border-[#1c2436] flex flex-col gap-2">
             <a
               href="https://wa.me/94770871018"
               target="_blank"
@@ -226,9 +240,27 @@ export default function Header() {
               <WhatsAppIcon className="w-5 h-5 text-black" />
               <span>{tCommon('fastSupport')} (077 087 1018)</span>
             </a>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setAdminModalOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-[#ccff00] py-2 transition-colors cursor-pointer"
+            >
+              <Shield className="w-3.5 h-3.5 text-[#ccff00]" />
+              <span>Staff & Admin Portal</span>
+            </button>
           </div>
         </div>
       )}
+
+      {/* Admin Login Modal Entry Point */}
+      <AdminLoginModal
+        isOpen={adminModalOpen}
+        onClose={() => setAdminModalOpen(false)}
+      />
     </header>
   );
 }

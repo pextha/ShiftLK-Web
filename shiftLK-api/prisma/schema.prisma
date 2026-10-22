@@ -36,6 +36,13 @@ enum ExpenseCategory {
   OTHER
 }
 
+enum StockMovementReason {
+  RESTOCK
+  ORDER_CONFIRMED
+  ORDER_CANCELLED
+  MANUAL_ADJUSTMENT
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique @db.VarChar(191)
@@ -46,8 +53,9 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  expenses     Expense[]
-  auditLogs    AuditLog[]
+  expenses       Expense[]
+  auditLogs      AuditLog[]
+  stockMovements StockMovement[]
 
   @@map("users")
 }
@@ -107,6 +115,7 @@ model Product {
   sellingPrice    Decimal                @map("selling_price") @db.Decimal(10, 2)
   costPrice       Decimal                @map("cost_price") @db.Decimal(10, 2)
   stockQty        Int                    @default(0) @map("stock_qty")
+  lowStockThreshold Int                  @default(5) @map("low_stock_threshold")
   weightKg        Decimal                @default(1.000) @map("weight_kg") @db.Decimal(6, 3)
   isActive        Boolean                @default(true) @map("is_active")
   createdAt       DateTime               @default(now()) @map("created_at")
@@ -118,12 +127,14 @@ model Product {
   images          ProductImage[]
   compatibilities VehicleCompatibility[]
   orderItems      OrderItem[]
+  stockMovements  StockMovement[]
 
   @@index([slug])
   @@index([categoryId])
   @@index([brandId])
   @@index([sellingPrice])
   @@index([stockQty])
+  @@index([lowStockThreshold])
   @@index([isActive])
   @@index([createdAt])
   @@map("products")
@@ -270,4 +281,31 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model StockMovement {
+  id         String              @id @default(cuid())
+  productId  String              @map("product_id")
+  changeQty  Int                 @map("change_qty")
+  reason     StockMovementReason
+  note       String?             @db.Text
+  userId     String?             @map("user_id")
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  product    Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+model SystemSetting {
+  id                  String   @id @default("default") @db.VarChar(50)
+  defaultLowStockAlert Int      @default(5) @map("default_low_stock_alert")
+  whatsappNumber      String   @default("+94771234567") @map("whatsapp_number") @db.VarChar(50)
+  hideProfitFromStaff Boolean  @default(false) @map("hide_profit_from_staff")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }

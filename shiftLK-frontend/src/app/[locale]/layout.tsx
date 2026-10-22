@@ -1,5 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter, Noto_Sans_Sinhala, Noto_Sans_Tamil } from 'next/font/google';
+import {
+  Inter,
+  Outfit,
+  Gemunu_Libre,
+  Noto_Sans_Sinhala,
+  Anek_Tamil,
+  Noto_Sans_Tamil,
+} from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -15,10 +22,31 @@ const inter = Inter({
   display: 'swap',
 });
 
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  weight: ['500', '600', '700', '800', '900'],
+  display: 'swap',
+});
+
+const gemunuLibre = Gemunu_Libre({
+  subsets: ['sinhala'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-gemunu',
+  display: 'swap',
+});
+
 const notoSinhala = Noto_Sans_Sinhala({
   subsets: ['sinhala'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sinhala',
+  display: 'swap',
+});
+
+const anekTamil = Anek_Tamil({
+  subsets: ['tamil'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-anek-tamil',
   display: 'swap',
 });
 
@@ -130,7 +158,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${notoSinhala.variable} ${notoTamil.variable}`}
+      className={`${inter.variable} ${outfit.variable} ${gemunuLibre.variable} ${notoSinhala.variable} ${anekTamil.variable} ${notoTamil.variable}`}
     >
       <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-brand-neon selection:text-black">
         <NextIntlClientProvider messages={messages}>
