@@ -5,10 +5,10 @@ import {
   Phone,
   Mail,
   Clock,
-  MessageCircle,
   Building,
   HelpCircle,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 interface ContactPageProps {
   params: Promise<{ locale: string }>;
@@ -64,7 +64,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
         {/* WhatsApp & Hotline */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
-            <MessageCircle className="w-6 h-6 fill-emerald-400 text-emerald-400" />
+            <WhatsAppIcon className="w-6 h-6 text-emerald-400" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Direct WhatsApp Hotline</h3>
@@ -79,7 +79,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-bold py-3 px-6 rounded-xl text-xs shadow-lg transition-all"
             >
-              <MessageCircle className="w-4 h-4 fill-white" />
+              <WhatsAppIcon className="w-4 h-4 text-white" />
               <span>Open WhatsApp Chat Now</span>
             </a>
           </div>

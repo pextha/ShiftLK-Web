@@ -11,8 +11,8 @@ import {
   XCircle,
   Car,
   ChevronRight,
-  MessageCircle,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import Image from 'next/image';
 
 interface ProductCardProps {
@@ -168,7 +168,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
                 }`}
                 title="Order via WhatsApp"
               >
-                <MessageCircle className="w-3.5 h-3.5 fill-black text-[#25D366]" />
+                <WhatsAppIcon className="w-3.5 h-3.5 text-black" />
                 <span className="hidden xs:inline">Order</span>
               </button>
             ) : (
@@ -180,7 +180,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
                     : 'bg-[#25D366] hover:bg-[#20ba59] text-black shadow-md shadow-emerald-950/40'
                 }`}
               >
-                <MessageCircle className="w-3.5 h-3.5 fill-black text-[#25D366]" />
+                <WhatsAppIcon className="w-3.5 h-3.5 text-black" />
                 <span>Order</span>
               </Link>
             )}

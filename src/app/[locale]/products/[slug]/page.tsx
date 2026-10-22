@@ -16,8 +16,8 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
-  MessageCircle,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 interface ProductPageProps {
   params: Promise<{
@@ -242,7 +242,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white py-3 rounded-xl text-xs font-bold transition-colors cursor-pointer"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-400" />
+              <WhatsAppIcon className="w-4 h-4 text-emerald-400" />
               <span>{tProd('consultSpecialist')}</span>
             </a>
           </div>

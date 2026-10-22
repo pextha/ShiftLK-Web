@@ -6,7 +6,6 @@ import { AppLocale, DeliveryZone, LocalizedProduct } from '@/lib/db/schema.types
 import { formatLKR } from '@/lib/utils/currency';
 import { getDeliveryFeeDetails } from '@/services/deliveryService';
 import {
-  MessageCircle,
   Truck,
   Plus,
   Minus,
@@ -17,6 +16,7 @@ import {
   AlertTriangle,
   XCircle,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import WhatsAppOrderModal from './WhatsAppOrderModal';
 
 interface LiveOrderSummaryProps {
@@ -225,7 +225,7 @@ export default function LiveOrderSummary({
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold py-4 px-6 rounded-2xl text-sm transition-all shadow-md cursor-pointer"
           >
-            <MessageCircle className="w-5 h-5 text-[#ccff00]" />
+            <WhatsAppIcon className="w-5 h-5 text-[#ccff00]" />
             <span>{t('chatForAvailability')}</span>
           </a>
         ) : (
@@ -234,7 +234,7 @@ export default function LiveOrderSummary({
             onClick={() => setIsModalOpen(true)}
             className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black py-4 px-6 rounded-2xl text-base shadow-xl shadow-emerald-950/60 hover:shadow-emerald-900/40 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
           >
-            <MessageCircle className="w-6 h-6 fill-white" />
+            <WhatsAppIcon className="w-6 h-6 text-white" />
             <span>{t('orderViaWhatsApp')}</span>
           </button>
         )}

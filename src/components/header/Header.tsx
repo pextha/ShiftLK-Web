@@ -12,8 +12,8 @@ import {
   Truck,
   ShieldCheck,
   Flame,
-  MessageCircle,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 export default function Header() {
   const locale = useLocale();
@@ -45,7 +45,7 @@ export default function Header() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-[#ccff00] hover:text-white transition-colors"
             >
-              <MessageCircle className="w-3.5 h-3.5 fill-[#ccff00] text-black" />
+              <WhatsAppIcon className="w-3.5 h-3.5 text-[#ccff00]" />
               <span>WhatsApp: 077 087 1018</span>
             </a>
           </div>
@@ -139,7 +139,7 @@ export default function Header() {
               className="hidden md:inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-black px-3.5 py-2 rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-95 shrink-0 whitespace-nowrap"
               title="Chat with Spare Parts Specialist"
             >
-              <MessageCircle className="w-4 h-4 fill-black text-[#25D366] shrink-0" />
+              <WhatsAppIcon className="w-4 h-4 text-black shrink-0" />
               <span>WhatsApp</span>
             </a>
 
@@ -223,7 +223,7 @@ export default function Header() {
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-black py-3 rounded-xl text-sm font-black shadow-lg"
             >
-              <MessageCircle className="w-5 h-5 fill-black text-[#25D366]" />
+              <WhatsAppIcon className="w-5 h-5 text-black" />
               <span>{tCommon('fastSupport')} (077 087 1018)</span>
             </a>
           </div>

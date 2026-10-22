@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  MessageCircle,
   Car,
   ChevronRight,
   Disc,
@@ -30,6 +29,7 @@ import {
   Shield,
   Bike,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -351,7 +351,7 @@ export default async function HomePage({ params }: HomePageProps) {
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 border border-emerald-800/40 rounded-3xl p-6 sm:p-12 shadow-2xl">
           <div className="relative z-10 max-w-2xl space-y-4">
             <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-1 rounded-full">
-              <MessageCircle className="w-3.5 h-3.5 fill-emerald-400" />
+              <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
               <span>Direct Undurugoda Hotline</span>
             </div>
 
@@ -370,7 +370,7 @@ export default async function HomePage({ params }: HomePageProps) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-xl shadow-emerald-950/60 text-sm transition-all"
               >
-                <MessageCircle className="w-5 h-5 fill-white" />
+                <WhatsAppIcon className="w-5 h-5 text-white" />
                 <span>{tHome('ctaButton')}</span>
               </a>
 

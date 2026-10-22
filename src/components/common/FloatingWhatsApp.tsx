@@ -3,7 +3,7 @@
 import { useLocale } from 'next-intl';
 import { AppLocale } from '@/lib/db/schema.types';
 import { buildGeneralEnquiryMessage, getWhatsAppUrl } from '@/lib/utils/whatsapp';
-import { MessageCircle } from 'lucide-react';
+import WhatsAppIcon from './WhatsAppIcon';
 import { useState } from 'react';
 
 export default function FloatingWhatsApp() {
@@ -52,7 +52,7 @@ export default function FloatingWhatsApp() {
         {/* Pulsing ring */}
         <span className="absolute -inset-1 rounded-full bg-emerald-500 opacity-40 group-hover:animate-ping -z-10" />
 
-        <MessageCircle className="w-7 h-7 fill-white" />
+        <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
 
         {/* Online status badge */}
         <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-brand-neon border-2 border-slate-950 rounded-full shadow-sm shadow-brand-neon" />

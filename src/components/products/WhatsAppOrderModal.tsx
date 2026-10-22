@@ -8,7 +8,6 @@ import { validateSriLankanPhone } from '@/lib/utils/phone-validator';
 import { getDeliveryFeeDetails } from '@/services/deliveryService';
 import {
   X,
-  MessageCircle,
   Truck,
   CheckCircle2,
   AlertCircle,
@@ -16,6 +15,7 @@ import {
   ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 interface WhatsAppOrderModalProps {
   product: LocalizedProduct;
@@ -153,7 +153,7 @@ export default function WhatsAppOrderModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              <MessageCircle className="w-5 h-5 fill-emerald-400 text-emerald-400" />
+              <WhatsAppIcon className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
               <h3 className="font-bold text-white text-base">
@@ -218,7 +218,7 @@ export default function WhatsAppOrderModal({
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-950/50 transition-all text-sm"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
+                  <WhatsAppIcon className="w-5 h-5 text-white" />
                   <span>{t('openWhatsAppDirect')}</span>
                   <ExternalLink className="w-4 h-4 ml-1 opacity-80" />
                 </a>
@@ -390,7 +390,7 @@ export default function WhatsAppOrderModal({
                     </>
                   ) : (
                     <>
-                      <MessageCircle className="w-5 h-5 fill-white" />
+                      <WhatsAppIcon className="w-5 h-5 text-white" />
                       <span>{t('submitBtn')}</span>
                     </>
                   )}

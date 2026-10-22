@@ -10,6 +10,7 @@ import {
   Truck,
   MessageCircle,
 } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 export default function Footer() {
   const tNav = useTranslations('nav');
@@ -225,7 +226,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 px-3 py-1.5 rounded-xl font-black hover:bg-[#25D366] hover:text-black transition-all"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" />
+                  <WhatsAppIcon className="w-3.5 h-3.5" />
                   <span>WhatsApp 24/7 Hotline</span>
                 </a>
               </div>

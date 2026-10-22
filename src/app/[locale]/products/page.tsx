@@ -9,7 +9,8 @@ import {
 } from '@/services/productService';
 import ProductFilterBar from '@/components/products/ProductFilterBar';
 import ProductCard from '@/components/products/ProductCard';
-import { Wrench, AlertCircle, MessageCircle } from 'lucide-react';
+import { Wrench, AlertCircle } from 'lucide-react';
+import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 interface ProductsPageProps {
   params: Promise<{ locale: string }>;
@@ -126,7 +127,7 @@ export default async function ProductsPage({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-2xl text-xs shadow-lg transition-all"
             >
-              <MessageCircle className="w-4 h-4 fill-white" />
+              <WhatsAppIcon className="w-4 h-4 text-white" />
               <span>{tSearch('askOnWhatsApp')}</span>
             </a>
           </div>
