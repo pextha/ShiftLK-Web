@@ -17,11 +17,30 @@ describe('Admin Orders & Atomic Stock Management', () => {
     const cookies = loginRes.headers['set-cookie'] as unknown as string[];
     authCookie = cookies.join('; ');
 
-    // 2. Find an active product with stock >= 10
+    // 2. Find or create an active product with stock >= 10
     testProduct = await prisma.product.findFirst({
       where: { isActive: true, stockQty: { gte: 10 } },
     });
-    expect(testProduct).toBeDefined();
+
+    if (!testProduct) {
+      const brand = await prisma.brand.findFirst();
+      const cat = await prisma.category.findFirst();
+      testProduct = await prisma.product.create({
+        data: {
+          slug: 'test-admin-stock-part',
+          partNumber: 'TEST-STK-01',
+          brandId: brand!.id,
+          categoryId: cat!.id,
+          sellingPrice: 2000,
+          costPrice: 1200,
+          stockQty: 20,
+          isActive: true,
+          translations: {
+            create: { language: 'en', name: 'Test Stock Part', description: 'Test' },
+          },
+        },
+      });
+    }
 
     // 3. Place a public order for 2 items
     const orderRes = await request(app)

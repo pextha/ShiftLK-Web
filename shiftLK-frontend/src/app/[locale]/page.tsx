@@ -329,18 +329,26 @@ export default async function HomePage({ params }: HomePageProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {featuredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center bg-slate-900/60 border border-slate-800 rounded-3xl">
+            <p className="text-sm text-slate-300 font-medium">
+              New spares inventory is being updated. Inquire directly or search by bike model.
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 text-center sm:hidden">
           <Link
             href="/products"
             className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-white font-bold py-3 px-6 rounded-xl text-xs w-full justify-center"
           >
-            <span>{tHome('viewAllParts')} (12 Parts Available)</span>
+            <span>{tHome('viewAllParts')}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

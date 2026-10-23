@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app';
 import { prisma } from '../../src/lib/prisma';
@@ -6,10 +6,41 @@ import { prisma } from '../../src/lib/prisma';
 describe('POST /api/v1/orders (Public Order Placement)', () => {
   let sampleProduct: any;
 
+  let createdTestProduct = false;
+
   beforeAll(async () => {
     sampleProduct = await prisma.product.findFirst({
       where: { isActive: true, stockQty: { gt: 5 } },
     });
+
+    if (!sampleProduct) {
+      const brand = await prisma.brand.findFirst();
+      const cat = await prisma.category.findFirst();
+      sampleProduct = await prisma.product.create({
+        data: {
+          slug: 'test-order-sample-part',
+          partNumber: 'TEST-ORD-01',
+          brandId: brand!.id,
+          categoryId: cat!.id,
+          sellingPrice: 1500,
+          costPrice: 900,
+          stockQty: 25,
+          isActive: true,
+          translations: {
+            create: { language: 'en', name: 'Test Sample Part', description: 'Test' },
+          },
+        },
+      });
+      createdTestProduct = true;
+    }
+  });
+
+  afterAll(async () => {
+    if (createdTestProduct && sampleProduct) {
+      await prisma.orderItem.deleteMany({ where: { productId: sampleProduct.id } });
+      await prisma.productTranslation.deleteMany({ where: { productId: sampleProduct.id } });
+      await prisma.product.delete({ where: { id: sampleProduct.id } });
+    }
   });
 
   it('should successfully place an order and return formatted WhatsApp URL and sequential order code', async () => {

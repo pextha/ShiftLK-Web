@@ -74,7 +74,7 @@ export async function getProducts(
       locale,
     });
 
-    if (apiRes && apiRes.items && apiRes.items.length > 0) {
+    if (apiRes && Array.isArray(apiRes.items)) {
       return apiRes.items.map((item) => ({
         id: item.id,
         slug: item.slug,
@@ -108,96 +108,11 @@ export async function getProducts(
       }));
     }
   } catch (err) {
-    console.warn('ShiftLK API getProducts failed, using local seed data fallback:', err);
+    console.warn('ShiftLK API getProducts failed:', err);
   }
 
-  // Built-in seed data fallback
-  let list = SEED_RAW_PRODUCTS.filter((p) => p.is_active).map((p) =>
-    localizeProduct(p, locale)
-  );
-
-  // Filter: Query
-  if (filters.query && filters.query.trim()) {
-    const q = filters.query.toLowerCase().trim();
-    list = list.filter((p) => {
-      const matchPart = p.part_number.toLowerCase().includes(q);
-      const matchBrand = p.brand.toLowerCase().includes(q);
-      const matchName = p.name.toLowerCase().includes(q);
-      const matchDesc = p.description.toLowerCase().includes(q);
-      const matchCompat = p.compatibility.some(
-        (c) =>
-          c.make.toLowerCase().includes(q) ||
-          c.model.toLowerCase().includes(q) ||
-          (c.chassis_code && c.chassis_code.toLowerCase().includes(q))
-      );
-      return matchPart || matchBrand || matchName || matchDesc || matchCompat;
-    });
-  }
-
-  // Filter: Category
-  if (filters.categorySlug && filters.categorySlug !== 'all') {
-    list = list.filter((p) => p.category_slug === filters.categorySlug);
-  }
-
-  // Filter: Brand
-  if (filters.brand && filters.brand !== 'all') {
-    list = list.filter((p) => p.brand.toLowerCase() === filters.brand?.toLowerCase());
-  }
-
-  // Filter: Condition
-  if (filters.condition && filters.condition !== 'all') {
-    list = list.filter((p) => p.condition === filters.condition);
-  }
-
-  // Filter: Vehicle Make & Model
-  if (filters.make && filters.make !== 'all') {
-    list = list.filter((p) =>
-      p.compatibility.some((c) => c.make.toLowerCase() === filters.make?.toLowerCase())
-    );
-  }
-
-  if (filters.model && filters.model !== 'all') {
-    list = list.filter((p) =>
-      p.compatibility.some((c) =>
-        c.model.toLowerCase().includes(filters.model!.toLowerCase())
-      )
-    );
-  }
-
-  // Filter: Year
-  if (filters.year) {
-    const targetYear = filters.year;
-    list = list.filter((p) =>
-      p.compatibility.some(
-        (c) =>
-          c.year_from <= targetYear && (!c.year_to || c.year_to >= targetYear)
-      )
-    );
-  }
-
-  // Filter: Price Range
-  if (filters.minPrice !== undefined) {
-    list = list.filter((p) => p.selling_price >= filters.minPrice!);
-  }
-  if (filters.maxPrice !== undefined) {
-    list = list.filter((p) => p.selling_price <= filters.maxPrice!);
-  }
-
-  // Filter: In Stock Only
-  if (filters.inStockOnly) {
-    list = list.filter((p) => p.stock_qty > 0);
-  }
-
-  // Sorting
-  if (filters.sortBy === 'price_asc') {
-    list.sort((a, b) => a.selling_price - b.selling_price);
-  } else if (filters.sortBy === 'price_desc') {
-    list.sort((a, b) => b.selling_price - a.selling_price);
-  } else {
-    list.sort((a, b) => b.id.localeCompare(a.id));
-  }
-
-  return list;
+  // When database has no products, strictly return empty array
+  return [];
 }
 
 export async function getProductBySlug(
@@ -239,13 +154,11 @@ export async function getProductBySlug(
         },
       };
     }
+    return null;
   } catch (err) {
-    console.warn(`ShiftLK API getProductBySlug(${slug}) failed, falling back to local seed data:`, err);
+    console.warn(`ShiftLK API getProductBySlug(${slug}) failed:`, err);
+    return null;
   }
-
-  const raw = SEED_RAW_PRODUCTS.find((p) => p.slug === slug && p.is_active);
-  if (!raw) return null;
-  return localizeProduct(raw, locale);
 }
 
 export async function getFeaturedProducts(
@@ -386,9 +299,8 @@ export async function getAllBrands(): Promise<string[]> {
       return brands.map((b) => b.name).sort();
     }
   } catch (err) {
-    console.warn('ShiftLK API getBrands failed, falling back to local seed data:', err);
+    console.warn('ShiftLK API getBrands failed:', err);
   }
 
-  const brands = Array.from(new Set(SEED_RAW_PRODUCTS.map((p) => p.brand)));
-  return brands.sort();
+  return [];
 }

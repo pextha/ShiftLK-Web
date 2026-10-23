@@ -1,8 +1,40 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app';
+import { prisma } from '../../src/lib/prisma';
 
 describe('Public REST API Endpoints', () => {
+  let createdTestProduct: any = null;
+
+  beforeAll(async () => {
+    const existing = await prisma.product.findFirst({ where: { isActive: true } });
+    if (!existing) {
+      const brand = await prisma.brand.findFirst();
+      const cat = await prisma.category.findFirst();
+      createdTestProduct = await prisma.product.create({
+        data: {
+          slug: 'public-api-test-product',
+          partNumber: 'PUB-TEST-01',
+          brandId: brand!.id,
+          categoryId: cat!.id,
+          sellingPrice: 1800,
+          costPrice: 1100,
+          stockQty: 15,
+          isActive: true,
+          translations: {
+            create: { language: 'en', name: 'Public API Test Product', description: 'Testing' },
+          },
+        },
+      });
+    }
+  });
+
+  afterAll(async () => {
+    if (createdTestProduct) {
+      await prisma.productTranslation.deleteMany({ where: { productId: createdTestProduct.id } });
+      await prisma.product.delete({ where: { id: createdTestProduct.id } });
+    }
+  });
   it('GET /health returns 200 healthy', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
