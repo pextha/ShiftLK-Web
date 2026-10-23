@@ -1,0 +1,15 @@
+{
+  "name": "shiftlk-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ShiftLK Spares - Monorepo for Frontend & Backend REST API",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:api": "npm --prefix backend run dev",
+    "dev:web": "npm --prefix frontend run dev",
+    "build:web": "npm --prefix frontend run build",
+    "build:api": "npm --prefix backend run build",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "test:api": "npm --prefix backend test"
+  }
+}
