@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-neon: #ccff00;
+  --color-brand-neon-hover: #b8e600;
+  --color-brand-neon-light: #e6ff66;
+  --color-brand-neon-muted: rgba(204, 255, 0, 0.12);
+  --color-brand-neon-glow: rgba(204, 255, 0, 0.35);
+  --color-brand-black: #05070a;
+  --color-brand-dark: #0a0d14;
+  --color-brand-surface: #0f1523;
+  --color-brand-card: #141c2e;
+  --color-brand-card-hover: #1a253d;
+  --color-brand-border: #212c42;
+  --color-brand-border-glow: rgba(204, 255, 0, 0.4);
+
+  --font-sans: var(--font-inter), var(--font-fallback);
+  --font-display: var(--font-outfit), var(--font-gemunu), var(--font-anek-tamil), var(--font-fallback);
+  --font-sinhala-display: var(--font-gemunu), var(--font-sinhala), var(--font-fallback);
+  --font-sinhala: var(--font-sinhala), var(--font-gemunu), var(--font-fallback);
+  --font-tamil-display: var(--font-anek-tamil), var(--font-tamil), var(--font-fallback);
+  --font-tamil: var(--font-tamil), var(--font-anek-tamil), var(--font-fallback);
+}
+
+@layer base {
+  :root {
+    --font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  body {
+    background-color: #06080d;
+    color: #f3f4f6;
+    font-family: var(--font-inter), var(--font-sinhala), var(--font-tamil), var(--font-fallback);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(204, 255, 0, 0.04) 0%, transparent 60%),
+      radial-gradient(circle at 100% 50%, rgba(37, 211, 102, 0.02) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  /* Default Headings (English / Latin) */
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-outfit), var(--font-inter), var(--font-fallback);
+    letter-spacing: -0.015em;
+  }
+
+  /* =========================================================================
+     Sinhala (si) Modern Typography System
+     - Display / Headings / Badges / Buttons: Gemunu Libre (bold, geometric, futuristic)
+     - Body / Descriptions: Noto Sans Sinhala (clean, comfortable, legibility-tuned)
+     ========================================================================= */
+  :lang(si) {
+    font-family: var(--font-sinhala), var(--font-gemunu), var(--font-fallback);
+    line-height: 1.68;
+    letter-spacing: 0.005em;
+  }
+
+  :lang(si) h1,
+  :lang(si) h2,
+  :lang(si) h3,
+  :lang(si) h4,
+  :lang(si) h5,
+  :lang(si) h6,
+  :lang(si) .font-display,
+  :lang(si) .font-heading,
+  :lang(si) button,
+  :lang(si) .btn-neon,
+  :lang(si) .badge-neon,
+  :lang(si) nav a {
+    font-family: var(--font-gemunu), var(--font-sinhala), var(--font-fallback);
+    letter-spacing: 0.015em;
+    line-height: 1.35;
+  }
+
+  /* Prevent tight tracking from squishing Sinhala glyphs */
+  :lang(si) .tracking-tight,
+  :lang(si) .tracking-tighter,
+  :lang(si) [class*="tracking-"] {
+    letter-spacing: 0.01em;
+  }
+
+  :lang(si) p,
+  :lang(si) span,
+  :lang(si) li {
+    line-height: 1.65;
+  }
+
+  /* =========================================================================
+     Tamil (ta) Modern Typography System
+     - Display / Headings / Badges / Buttons: Anek Tamil (sharp, modern, impactful)
+     - Body / Descriptions: Noto Sans Tamil / Anek Tamil
+     ========================================================================= */
+  :lang(ta) {
+    font-family: var(--font-tamil), var(--font-anek-tamil), var(--font-fallback);
+    line-height: 1.68;
+    letter-spacing: 0.005em;
+  }
+
+  :lang(ta) h1,
+  :lang(ta) h2,
+  :lang(ta) h3,
+  :lang(ta) h4,
+  :lang(ta) h5,
+  :lang(ta) h6,
+  :lang(ta) .font-display,
+  :lang(ta) .font-heading,
+  :lang(ta) button,
+  :lang(ta) .btn-neon,
+  :lang(ta) .badge-neon,
+  :lang(ta) nav a {
+    font-family: var(--font-anek-tamil), var(--font-tamil), var(--font-fallback);
+    letter-spacing: 0.015em;
+    line-height: 1.35;
+  }
+
+  /* Prevent tight tracking from squishing Tamil glyphs */
+  :lang(ta) .tracking-tight,
+  :lang(ta) .tracking-tighter,
+  :lang(ta) [class*="tracking-"] {
+    letter-spacing: 0.01em;
+  }
+
+  :lang(ta) p,
+  :lang(ta) span,
+  :lang(ta) li {
+    line-height: 1.65;
+  }
+}
+
+/* Custom scrollbars & utilities */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090c13;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #232c3f;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ccff00;
+}
+
+/* Brand neon effects & animations */
+.neon-glow {
+  box-shadow: 0 0 25px rgba(204, 255, 0, 0.35);
+}
+
+.neon-glow-sm {
+  box-shadow: 0 0 12px rgba(204, 255, 0, 0.22);
+}
+
+.neon-text-glow {
+  text-shadow: 0 0 12px rgba(204, 255, 0, 0.6);
+}
+
+.neon-border-hover:hover {
+  border-color: #ccff00;
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.25);
+}
+
+.badge-neon {
+  background: rgba(204, 255, 0, 0.12);
+  color: #ccff00;
+  border: 1px solid rgba(204, 255, 0, 0.35);
+}
+
+.btn-neon {
+  background-color: #ccff00;
+  color: #000000;
+  font-weight: 800;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-neon:hover {
+  background-color: #b8e600;
+  box-shadow: 0 0 20px rgba(204, 255, 0, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Subtle pulse animation */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s infinite ease-in-out;
+}
+
+/* Print styles for admin packing slips / invoices */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  aside, header {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+
