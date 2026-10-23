@@ -86,7 +86,12 @@ export async function apiClient<T = any>(endpoint: string, options: RequestOptio
       throw new ApiError(message, code, response.status, errObj.details);
     }
 
-    return json.data !== undefined ? json.data : json;
+    // If response contains pagination alongside data, preserve the entire envelope
+    if (json.pagination !== undefined && json.data !== undefined) {
+      return json as T;
+    }
+
+    return (json.data !== undefined ? json.data : json) as T;
   } catch (error: any) {
     if (error instanceof ApiError) {
       throw error;

@@ -71,8 +71,12 @@ export default function ExpensesPage() {
     },
   });
 
-  const expenses = expensesData?.data || [];
-  const pagination = expensesData?.pagination || { page: 1, totalPages: 1, total: 0 };
+  const expenses: any[] = Array.isArray(expensesData)
+    ? expensesData
+    : Array.isArray(expensesData?.data)
+    ? expensesData.data
+    : [];
+  const pagination = expensesData?.pagination || { page: 1, totalPages: 1, total: expenses.length };
 
   // Calculate sum for loaded list
   const totalLoadedAmount = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);

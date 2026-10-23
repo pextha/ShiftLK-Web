@@ -83,8 +83,19 @@ export default function ProductsPage() {
     },
   });
 
-  const products = productData?.data || [];
-  const pagination = productData?.pagination || { page: 1, totalPages: 1, total: 0 };
+  const getMediaUrl = (url?: string | null) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    return `${base.replace(/\/api\/v1\/?$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  const products: any[] = Array.isArray(productData)
+    ? productData
+    : Array.isArray(productData?.data)
+    ? productData.data
+    : [];
+  const pagination = productData?.pagination || { page: 1, totalPages: 1, total: products.length };
 
   // Mutations
   const inlineStockMutation = useMutation({
@@ -419,12 +430,11 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0 relative">
                             {primaryImg ? (
-                              <Image
-                                src={primaryImg}
+                              <img
+                                src={getMediaUrl(primaryImg) || ''}
                                 alt={enName}
-                                width={40}
-                                height={40}
                                 className="object-cover w-full h-full"
+                                crossOrigin="anonymous"
                               />
                             ) : (
                               <Package className="w-5 h-5 text-slate-600" />

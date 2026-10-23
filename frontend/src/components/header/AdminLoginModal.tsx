@@ -76,7 +76,10 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
 
       if (!res.ok) {
         if (res.status === 429) {
-          throw new Error('Account locked due to too many failed attempts. Please retry in 15 minutes.');
+          throw new Error(
+            data?.error?.message ||
+              'Access from this device is temporarily locked due to too many failed attempts. Please retry in 10 minutes.'
+          );
         }
         throw new Error(data?.error?.message || 'Invalid email or password');
       }

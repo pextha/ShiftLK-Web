@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/common/Toast';
+import { ImageUploadDropzone } from '@/components/admin/ui/ImageUploadDropzone';
 
 interface CompatibilityItem {
   make: string;
@@ -165,7 +166,12 @@ export default function NewProductPage() {
       router.push('/admin/products');
     },
     onError: (err: any) => {
-      toastError(err.message || 'Failed to create product');
+      if (err.details && Array.isArray(err.details) && err.details.length > 0) {
+        const fieldErrors = err.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
+        toastError(`Validation Error: ${fieldErrors}`);
+      } else {
+        toastError(err.message || 'Failed to create product');
+      }
     },
   });
 
@@ -187,6 +193,11 @@ export default function NewProductPage() {
       return;
     }
 
+    if (selling <= 0) {
+      toastError('Selling price must be greater than LKR 0');
+      return;
+    }
+
     // Prepare translations array
     const translations = [
       { language: 'en', name: nameEn.trim(), description: descEn.trim() || nameEn.trim() },
@@ -200,16 +211,20 @@ export default function NewProductPage() {
 
     // Filter valid image URLs
     const validImages = images
-      .filter((img) => img.imageUrl.trim() !== '')
+      .filter((img) => img.imageUrl && img.imageUrl.trim() !== '')
       .map((img, i) => ({
         imageUrl: img.imageUrl.trim(),
         isPrimary: img.isPrimary,
         displayOrder: i,
       }));
 
+    if (validImages.length > 0 && !validImages.some((img) => img.isPrimary)) {
+      validImages[0].isPrimary = true;
+    }
+
     // Filter valid compatibilities
     const validCompatibilities = compatibilities
-      .filter((c) => c.make.trim() !== '' && c.model.trim() !== '')
+      .filter((c) => c.make && c.make.trim() !== '' && c.model && c.model.trim() !== '')
       .map((c) => ({
         make: c.make.trim(),
         model: c.model.trim(),
@@ -218,9 +233,18 @@ export default function NewProductPage() {
         chassisCode: c.chassisCode?.trim() || null,
       }));
 
+    const cleanSlug =
+      (slug.trim()
+        ? slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        : nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')) ||
+      `part-${Date.now().toString(36)}`;
+
+    const generatedPartNumber =
+      partNumber.trim() || `PART-${Date.now().toString(36).toUpperCase()}`;
+
     const payload = {
-      slug: slug.trim() || nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      partNumber: partNumber.trim(),
+      slug: cleanSlug,
+      partNumber: generatedPartNumber,
       brandId,
       categoryId,
       condition,
@@ -485,82 +509,24 @@ export default function NewProductPage() {
             )}
           </Card>
 
-          {/* Section 3: Product Images */}
+          {/* Section 3: Product Images (Cloudflare R2 Object Storage) */}
           <Card className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <ImageIcon className="w-4 h-4 text-brand-neon" />
                 Product Photos & Media
               </h2>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addImageField}
-                className="gap-1.5 text-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Image URL
-              </Button>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Upload motorbike part photos directly to Cloudflare R2 object storage with fast CDN delivery across Sri Lanka.
+              </p>
             </div>
 
-            <div className="space-y-3">
-              {images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-slate-900 border border-slate-800"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
-                    {img.imageUrl ? (
-                      <Image
-                        src={img.imageUrl}
-                        alt="Preview"
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="w-5 h-5 text-slate-600" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <input
-                      type="url"
-                      placeholder="https://example.com/images/part-photo.jpg"
-                      value={img.imageUrl}
-                      onChange={(e) => updateImageUrl(idx, e.target.value)}
-                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-neon"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setPrimaryImage(idx)}
-                      className={cn(
-                        'px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-colors',
-                        img.isPrimary
-                          ? 'bg-brand-neon text-black'
-                          : 'bg-slate-800 text-slate-400 hover:text-white'
-                      )}
-                    >
-                      {img.isPrimary ? 'Primary' : 'Set Primary'}
-                    </button>
-
-                    {images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeImage(idx)}
-                        className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ImageUploadDropzone
+              images={images}
+              onChange={setImages}
+              folder="products"
+              maxFiles={8}
+            />
           </Card>
 
           {/* Section 4: Vehicle Compatibility */}

@@ -25,12 +25,14 @@ import adminAnalyticsRoutes from './modules/analytics/analytics.routes';
 import adminAuditRoutes from './modules/audit/audit.routes';
 import adminUsersRoutes from './modules/users/users.routes';
 import adminSettingsRoutes from './modules/settings/settings.routes';
+import uploadsRoutes from './modules/uploads/uploads.routes';
 
 const app = express();
 
 // Security & headers
 app.use(helmet({
   contentSecurityPolicy: false, // Allows Swagger UI assets
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 const allowedOrigins = [
@@ -112,6 +114,7 @@ app.use('/api/v1/admin/analytics', adminAnalyticsRoutes);
 app.use('/api/v1/admin/audit-logs', adminAuditRoutes);
 app.use('/api/v1/admin/users', adminUsersRoutes);
 app.use('/api/v1/admin/settings', adminSettingsRoutes);
+app.use('/api/v1', uploadsRoutes);
 
 // 404 handler for unknown routes
 app.use((req: Request, res: Response, next) => {

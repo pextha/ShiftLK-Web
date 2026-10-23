@@ -15,16 +15,18 @@ const lockoutStore = new Map<string, LockoutEntry>();
 const DUMMY_HASH = '$2b$10$abcdefghijklmnopqrstuuabcdefghijklmnopqrstuuabcdefghijk';
 
 export class AuthService {
-  async login(email: string, passwordPlain: string) {
+  async login(email: string, passwordPlain: string, clientIp: string = '127.0.0.1') {
     const normalizedEmail = email.toLowerCase().trim();
+    const cleanIp = (clientIp || '127.0.0.1').replace(/^::ffff:/, '').trim();
+    const lockoutKey = `${cleanIp}:${normalizedEmail}`;
     const now = Date.now();
-    const entry = lockoutStore.get(normalizedEmail);
+    const entry = lockoutStore.get(lockoutKey);
 
     if (entry && entry.lockedUntil && entry.lockedUntil > now) {
       const remainingMinutes = Math.ceil((entry.lockedUntil - now) / (60 * 1000));
       throw new AppError(
         'ACCOUNT_LOCKED',
-        `Too many failed attempts. Please try again in ${remainingMinutes} minute(s).`,
+        `Too many failed attempts from this device. Please try again in ${remainingMinutes} minute(s).`,
         429
       );
     }
@@ -44,12 +46,12 @@ export class AuthService {
         lockedUntil = now + env.LOCKOUT_MINUTES * 60 * 1000;
       }
 
-      lockoutStore.set(normalizedEmail, { attempts: currentAttempts, lockedUntil });
+      lockoutStore.set(lockoutKey, { attempts: currentAttempts, lockedUntil });
 
       if (lockedUntil) {
         throw new AppError(
           'ACCOUNT_LOCKED',
-          `Too many failed attempts. Account temporarily locked for ${env.LOCKOUT_MINUTES} minutes.`,
+          `Too many failed attempts. Access from this device is temporarily locked for ${env.LOCKOUT_MINUTES} minutes.`,
           429
         );
       }
@@ -58,7 +60,7 @@ export class AuthService {
     }
 
     // Reset lockout entry on successful authentication
-    lockoutStore.delete(normalizedEmail);
+    lockoutStore.delete(lockoutKey);
 
     const payload: AuthUserPayload = {
       id: user.id,
@@ -156,6 +158,16 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  resetLockout(email: string, clientIp: string = '127.0.0.1') {
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanIp = (clientIp || '127.0.0.1').replace(/^::ffff:/, '').trim();
+    lockoutStore.delete(`${cleanIp}:${normalizedEmail}`);
+  }
+
+  clearAllLockouts() {
+    lockoutStore.clear();
   }
 }
 

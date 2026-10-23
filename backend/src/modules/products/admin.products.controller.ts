@@ -60,6 +60,7 @@ export async function getAdminProducts(req: Request, res: Response, next: NextFu
         costPrice: cost,
         profitMarginPercent: Math.round(margin * 10) / 10,
         stockQty: p.stockQty,
+        lowStockThreshold: p.lowStockThreshold ?? 5,
         weightKg: Number(p.weightKg),
         isActive: p.isActive,
         createdAt: p.createdAt,
@@ -106,6 +107,7 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
           sellingPrice: body.sellingPrice,
           costPrice: body.costPrice,
           stockQty: body.stockQty,
+          lowStockThreshold: body.lowStockThreshold ?? 5,
           weightKg: body.weightKg || 1.0,
           isActive: body.isActive ?? true,
           translations: {
@@ -189,6 +191,38 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
         });
       }
 
+      // If images provided, delete old and recreate
+      if (body.images !== undefined) {
+        await tx.productImage.deleteMany({ where: { productId: id } });
+        if (body.images.length > 0) {
+          await tx.productImage.createMany({
+            data: body.images.map((img: any) => ({
+              productId: id,
+              imageUrl: img.imageUrl,
+              displayOrder: img.displayOrder || 0,
+              isPrimary: img.isPrimary || false,
+            })),
+          });
+        }
+      }
+
+      // If compatibilities provided, delete old and recreate
+      if (body.compatibilities !== undefined) {
+        await tx.vehicleCompatibility.deleteMany({ where: { productId: id } });
+        if (body.compatibilities.length > 0) {
+          await tx.vehicleCompatibility.createMany({
+            data: body.compatibilities.map((c: any) => ({
+              productId: id,
+              make: c.make,
+              model: c.model,
+              yearFrom: c.yearFrom,
+              yearTo: c.yearTo || null,
+              chassisCode: c.chassisCode || null,
+            })),
+          });
+        }
+      }
+
       const prod = await tx.product.update({
         where: { id },
         data: {
@@ -200,6 +234,7 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
           sellingPrice: body.sellingPrice,
           costPrice: body.costPrice,
           stockQty: body.stockQty,
+          lowStockThreshold: body.lowStockThreshold,
           weightKg: body.weightKg,
           isActive: body.isActive,
         },

@@ -58,8 +58,12 @@ export default function OrdersPage() {
     },
   });
 
-  const orders = ordersData?.data || [];
-  const pagination = ordersData?.pagination || { page: 1, totalPages: 1, total: 0 };
+  const orders: any[] = Array.isArray(ordersData)
+    ? ordersData
+    : Array.isArray(ordersData?.data)
+    ? ordersData.data
+    : [];
+  const pagination = ordersData?.pagination || { page: 1, totalPages: 1, total: orders.length };
 
   const getStatusBadge = (orderStatus: string) => {
     switch (orderStatus) {

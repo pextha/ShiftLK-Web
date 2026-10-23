@@ -34,7 +34,8 @@ function LoginForm() {
     } catch (err: any) {
       if (err.status === 429) {
         setError(
-          'Account is temporarily locked due to too many failed attempts. Please wait 15 minutes before retrying.'
+          err.message ||
+            'Access from this device is temporarily locked due to too many failed attempts. Please wait 10 minutes before retrying.'
         );
       } else {
         setError(err.message || 'Invalid email or password. Please try again.');

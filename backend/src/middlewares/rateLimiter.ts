@@ -42,16 +42,17 @@ export const orderLookupLimiter = rateLimit({
   },
 });
 
-// Limiter for Admin Authentication (10 attempts per 15 minutes)
+// Limiter for Admin Authentication (30 attempts per 10 minutes per network/IP)
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: 10 * 60 * 1000,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     error: {
       code: 'AUTH_RATE_LIMIT_EXCEEDED',
-      message: 'Too many login attempts. Please wait 15 minutes before trying again.',
+      message: 'Too many login attempts from this network. Please wait 10 minutes before trying again.',
     },
   },
 });
+

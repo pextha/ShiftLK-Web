@@ -69,8 +69,16 @@ export default function StockOverviewPage() {
       apiClient<any>(`/api/v1/admin/products/stock/movements?page=${movementPage}&limit=20`),
   });
 
-  const products = productsData?.data || [];
-  const movements = movementsData?.data || [];
+  const products: any[] = Array.isArray(productsData)
+    ? productsData
+    : Array.isArray(productsData?.data)
+    ? productsData.data
+    : [];
+  const movements: any[] = Array.isArray(movementsData)
+    ? movementsData
+    : Array.isArray(movementsData?.data)
+    ? movementsData.data
+    : [];
   const movementsPagination = movementsData?.pagination || { page: 1, totalPages: 1 };
 
   // Filter products by stock status

@@ -8,8 +8,15 @@ const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { email, password } = req.body;
+  const rawIp =
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() ||
+    req.ip ||
+    req.socket.remoteAddress ||
+    '127.0.0.1';
+  const clientIp = rawIp.replace(/^::ffff:/, '');
+
   try {
-    const result = await authService.login(email, password);
+    const result = await authService.login(email, password, clientIp);
 
     res.cookie('access_token', result.accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
     res.cookie('refresh_token', result.refreshToken, getCookieOptions(REFRESH_TOKEN_MAX_AGE));
@@ -20,7 +27,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       action: 'LOGIN_SUCCESS',
       entityType: 'User',
       entityId: result.user.id,
-      ipAddress: req.ip,
+      ipAddress: clientIp,
     });
 
     res.json({
@@ -36,7 +43,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       entityType: 'User',
       entityId: String(email || 'unknown'),
       newValues: JSON.stringify({ message: error.message, code: error.code }),
-      ipAddress: req.ip,
+      ipAddress: clientIp,
     });
     next(error);
   }
