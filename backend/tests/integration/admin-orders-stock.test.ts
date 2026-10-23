@@ -127,4 +127,53 @@ describe('Admin Orders & Atomic Stock Management', () => {
     const afterCancelProd = await prisma.product.findUnique({ where: { id: testProduct.id } });
     expect(afterCancelProd!.stockQty).toBe(initialQty + 2);
   });
+
+  it('should support configuring custom lowStockThreshold and trigger low stock alerts accordingly', async () => {
+    const brand = await prisma.brand.findFirst();
+    const cat = await prisma.category.findFirst();
+    const testSlug = `custom-threshold-${Date.now()}`;
+
+    // Create a product with custom lowStockThreshold = 8 and stockQty = 7
+    const createRes = await request(app)
+      .post('/api/v1/admin/products')
+      .set('Cookie', authCookie)
+      .send({
+        slug: testSlug,
+        partNumber: `THRES-${Date.now()}`,
+        brandId: brand!.id,
+        categoryId: cat!.id,
+        condition: 'NEW',
+        sellingPrice: 1500,
+        costPrice: 900,
+        stockQty: 7,
+        lowStockThreshold: 8,
+        translations: [{ language: 'en', name: 'Custom Alert Part', description: 'Testing threshold' }],
+      });
+
+    expect(createRes.status).toBe(201);
+    const prodId = createRes.body.data.id;
+    expect(createRes.body.data.lowStockThreshold).toBe(8);
+
+    // Verify low-stock analytics returns this item (since 7 <= 8)
+    const lowStockRes = await request(app)
+      .get('/api/v1/admin/analytics/low-stock')
+      .set('Cookie', authCookie);
+
+    expect(lowStockRes.status).toBe(200);
+    const found = lowStockRes.body.data.find((p: any) => p.id === prodId);
+    expect(found).toBeDefined();
+    expect(found.lowStockThreshold).toBe(8);
+
+    // Update threshold to 5 (since stock is 7, it is now healthy and above threshold)
+    const updateRes = await request(app)
+      .put(`/api/v1/admin/products/${prodId}`)
+      .set('Cookie', authCookie)
+      .send({ lowStockThreshold: 5 });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.data.lowStockThreshold).toBe(5);
+
+    // Clean up test product
+    await prisma.product.delete({ where: { id: prodId } });
+  });
 });

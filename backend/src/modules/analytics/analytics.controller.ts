@@ -32,7 +32,7 @@ export async function getTopProducts(req: Request, res: Response, next: NextFunc
 
 export async function getLowStock(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const threshold = req.query.threshold ? Number(req.query.threshold) : 3;
+    const threshold = req.query.threshold ? Number(req.query.threshold) : undefined;
     const result = await analyticsService.getLowStock(threshold);
     res.json({ data: result });
   } catch (error) {

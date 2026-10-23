@@ -52,10 +52,10 @@ export default function DashboardPage() {
     queryFn: () => apiClient<any[]>('/api/v1/admin/analytics/top-products?limit=5'),
   });
 
-  // Fetch Low Stock Products
+  // Fetch Low Stock Products (dynamic per-product threshold)
   const { data: lowStock, isLoading: stockLoading } = useQuery({
     queryKey: ['admin-low-stock'],
-    queryFn: () => apiClient<any[]>('/api/v1/admin/analytics/low-stock?threshold=5'),
+    queryFn: () => apiClient<any[]>('/api/v1/admin/analytics/low-stock'),
   });
 
   return (
@@ -314,8 +314,8 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 ml-3">
-                    <Badge variant={item.stockQty <= 2 ? 'danger' : 'warning'}>
-                      {item.stockQty} left
+                    <Badge variant={item.stockQty <= 0 ? 'danger' : 'warning'}>
+                      {item.stockQty} left (min {item.lowStockThreshold || 5})
                     </Badge>
                     <Link href={`/admin/products/${item.id}/edit`}>
                       <Button size="sm" variant="outline" className="h-7 text-xs px-2.5">

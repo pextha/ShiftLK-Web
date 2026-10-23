@@ -120,30 +120,30 @@ Allow store managers to configure an individual **Low Stock Alert Threshold** fo
 ### 2.2 Technical Implementation Plan for Task 2
 
 #### 1. Backend Verification & Validation (`backend/`)
-- [ ] The Prisma schema already includes `lowStockThreshold Int @default(5) @map("low_stock_threshold")`.
-- [ ] In `backend/src/modules/products/admin.products.schema.ts`:
+- [x] The Prisma schema already includes `lowStockThreshold Int @default(5) @map("low_stock_threshold")`.
+- [x] In `backend/src/modules/products/admin.products.schema.ts`:
   - Ensure `createProductSchema` and `updateProductSchema` include:
     ```typescript
     lowStockThreshold: z.coerce.number().int().min(1, 'Threshold must be at least 1').default(5),
     ```
-- [ ] In `backend/src/modules/products/admin.products.controller.ts`:
+- [x] In `backend/src/modules/products/admin.products.controller.ts`:
   - Validate that `lowStockThreshold` is saved on product creation (`prisma.product.create`).
   - Validate that `lowStockThreshold` updates properly during product edits (`prisma.product.update`).
-- [ ] Add integration test verifying custom thresholds (e.g., threshold set to 8 alerts when stock drops to 8).
+- [x] Add integration test verifying custom thresholds (e.g., threshold set to 8 alerts when stock drops to 8).
 
 #### 2. Admin UI Enhancements (`frontend/`)
-- [ ] In `frontend/src/app/admin/products/new/page.tsx`:
+- [x] In `frontend/src/app/admin/products/new/page.tsx`:
   - Verify the "Low Stock Alert Threshold" input field has clear helper text:
     `"Alerts will trigger in Dashboard and Stock views when inventory drops to or below this amount."`
   - Ensure default value is `5`.
   - Validate that the submitted value is transmitted in the payload.
-- [ ] In `frontend/src/app/admin/products/[id]/edit/page.tsx`:
+- [x] In `frontend/src/app/admin/products/[id]/edit/page.tsx`:
   - Pre-fill the existing product's `lowStockThreshold`.
   - Allow the admin to modify and save the value.
-- [ ] In `frontend/src/app/admin/stock/page.tsx`:
+- [x] In `frontend/src/app/admin/stock/page.tsx`:
   - Verify the stock health calculation compares `product.stockQty <= product.lowStockThreshold` (rather than a hardcoded 5).
   - Badge with `Low Stock` (amber) or `Out of Stock` (rose).
-- [ ] In `frontend/src/app/admin/dashboard/page.tsx`:
+- [x] In `frontend/src/app/admin/dashboard/page.tsx`:
   - Ensure the "Low Stock Alerts" card queries and displays products matching `stockQty <= lowStockThreshold`.
 
 ---
@@ -221,9 +221,9 @@ Provide a dedicated Category Management system where admins can create, view, ed
 - [x] Product images stream directly from R2 via CDN and fallback media endpoint.
 
 ### Low Stock Threshold:
-- [ ] Admin can enter a custom low stock threshold (e.g. `12`) when adding a product.
-- [ ] Product displays low stock warnings in `/admin/stock` when quantity drops to 12.
-- [ ] Default threshold remains 5 if unspecified.
+- [x] Admin can enter a custom low stock threshold (e.g. `12`) when adding a product.
+- [x] Product displays low stock warnings in `/admin/stock` when quantity drops to 12.
+- [x] Default threshold remains 5 if unspecified.
 
 ### Category Management:
 - [ ] Admin can view, create, edit, and disable categories from `/admin/categories`.

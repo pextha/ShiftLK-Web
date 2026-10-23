@@ -123,11 +123,10 @@ export class AnalyticsService {
     return results;
   }
 
-  async getLowStock(threshold: number = 3) {
+  async getLowStock(threshold?: number) {
     const products = await prisma.product.findMany({
       where: {
         isActive: true,
-        stockQty: { lte: threshold },
       },
       orderBy: { stockQty: 'asc' },
       include: {
@@ -136,13 +135,19 @@ export class AnalyticsService {
       },
     });
 
-    return products.map((p) => ({
+    const lowStockItems = products.filter((p) => {
+      const limit = threshold !== undefined ? threshold : p.lowStockThreshold ?? 5;
+      return p.stockQty <= limit;
+    });
+
+    return lowStockItems.map((p) => ({
       id: p.id,
       slug: p.slug,
       partNumber: p.partNumber,
       name: p.translations[0]?.name || p.slug,
       brand: p.brand?.name,
       stockQty: p.stockQty,
+      lowStockThreshold: p.lowStockThreshold ?? 5,
       sellingPrice: Number(p.sellingPrice),
       costPrice: Number(p.costPrice),
     }));

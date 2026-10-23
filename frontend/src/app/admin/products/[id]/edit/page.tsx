@@ -733,13 +733,18 @@ export default function EditProductPage() {
               required
             />
 
-            <Input
-              label="Low Stock Alert Threshold"
-              type="number"
-              min="1"
-              value={lowStockThreshold}
-              onChange={(e) => setLowStockThreshold(e.target.value)}
-            />
+            <div>
+              <Input
+                label="Low Stock Alert Threshold"
+                type="number"
+                min="1"
+                value={lowStockThreshold}
+                onChange={(e) => setLowStockThreshold(e.target.value)}
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Alerts will trigger in Dashboard and Stock views when inventory drops to or below this amount.
+              </p>
+            </div>
 
             <Input
               label="Shipping Weight (kg)"
