@@ -40,6 +40,11 @@ services:
       FRONTEND_ORIGIN: http://localhost:3000
       JWT_SECRET: shiftlk_production_jwt_access_secret_key_2026
       JWT_REFRESH_SECRET: shiftlk_production_jwt_refresh_secret_key_2026
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME}
+      R2_PUBLIC_DOMAIN: ${R2_PUBLIC_DOMAIN}
     volumes:
       - ./uploads:/app/uploads
 
