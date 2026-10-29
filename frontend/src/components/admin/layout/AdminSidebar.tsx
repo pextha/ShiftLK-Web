@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Receipt,
   Settings,
+  Layers,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -22,6 +23,7 @@ import { useAuth } from '@/lib/auth-context';
 const navigationItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Categories', href: '/admin/categories', icon: Layers },
   { name: 'Stock Overview', href: '/admin/stock', icon: Boxes },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
   { name: 'Reports & Profit', href: '/admin/reports', icon: TrendingUp },

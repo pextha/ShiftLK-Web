@@ -184,17 +184,18 @@ export class ApiClient {
     }
   }
 
-  async getCategories(): Promise<
+  async getCategories(locale?: AppLocale): Promise<
     Array<{
       id: string;
       slug: string;
       icon: string;
       name: string;
       description?: string;
-      translations: Record<string, { name: string; description?: string }>;
+      translations?: Record<string, { name: string; description?: string }>;
     }>
   > {
-    return this.request('/categories', { method: 'GET' });
+    const qs = locale ? `?locale=${locale}` : '';
+    return this.request(`/categories${qs}`, { method: 'GET' });
   }
 
   async getBrands(): Promise<

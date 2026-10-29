@@ -10,7 +10,7 @@ This document defines the actionable development tasks, architectural requiremen
 |---|---|---|---|---|
 | **1** | **Cloudflare R2 Object Storage Integration** | Store product images in Cloudflare R2 bucket with edge delivery | High | ✅ Completed |
 | **2** | **Custom Product Low Stock Threshold** | Allow admins to define custom low stock alerts per product | Medium | ✅ Completed |
-| **3** | **Admin Category Management & Selection** | Full CRUD for categories + in-form quick category creation | High | ⏳ Pending |
+| **3** | **Admin Category Management & Selection** | Full CRUD for categories + in-form quick category creation | High | ✅ Completed |
 
 ---
 
@@ -158,7 +158,7 @@ Provide a dedicated Category Management system where admins can create, view, ed
 ### 3.2 Technical Implementation Plan for Task 3
 
 #### 1. Backend API (`backend/`)
-- [ ] Create category schemas in `backend/src/modules/categories/categories.schema.ts`:
+- [x] Create category schemas in `backend/src/modules/categories/categories.schema.ts`:
   ```typescript
   export const createCategorySchema = z.object({
     slug: z.string().min(2).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
@@ -172,15 +172,15 @@ Provide a dedicated Category Management system where admins can create, view, ed
     }),
   });
   ```
-- [ ] Implement Admin Category Controller & Service:
+- [x] Implement Admin Category Controller & Service:
   - `GET /api/v1/admin/categories` — List all categories with product counts and all translations.
   - `POST /api/v1/admin/categories` — Create category and `category_translations` atomically in Prisma transaction.
   - `PUT /api/v1/admin/categories/:id` — Update slug, icon, display order, isActive, and translation records.
   - `DELETE /api/v1/admin/categories/:id` — Prevent deletion if products are linked (return 400 with linked count), or allow soft-delete (`isActive: false`).
-- [ ] Register admin routes in `backend/src/modules/categories/categories.routes.ts` protected by `authGuard` and `requireRole(['ADMIN'])`.
+- [x] Register admin routes in `backend/src/modules/categories/categories.routes.ts` protected by `authGuard` and `requireRole(['ADMIN'])`.
 
 #### 2. Admin UI: Dedicated Categories Page (`frontend/src/app/admin/categories/page.tsx`)
-- [ ] Create `/admin/categories` page displaying:
+- [x] Create `/admin/categories` page displaying:
   - Header with total category count and `+ Add Category` button.
   - Responsive table showing:
     - Icon & English Name
@@ -190,18 +190,18 @@ Provide a dedicated Category Management system where admins can create, view, ed
     - Display Order
     - Status (`Active` / `Disabled` badge)
     - Actions (Edit, Toggle Status, Delete)
-- [ ] Create `CategoryModal.tsx` for creating/editing categories:
+- [x] Create `CategoryModal.tsx` for creating/editing categories:
   - Auto-generate slug from English name.
   - Icon picker (popular Lucide motorbike icons: `Wrench`, `Cog`, `Disc`, `Zap`, `Shield`, `Activity`, `Gauge`, `Layers`).
   - Trilingual tabs or stacked inputs for `English`, `Sinhala (සිංහල)`, and `Tamil (தமிழ்)`.
   - Display order input and active status toggle.
 
 #### 3. Admin UI: Navigation Integration
-- [ ] In `frontend/src/components/admin/layout/AdminSidebar.tsx`:
+- [x] In `frontend/src/components/admin/layout/AdminSidebar.tsx`:
   - Add `Categories` navigation item with `Layers` icon under `/admin/categories`.
 
 #### 4. Admin UI: In-Form Quick Category Creation in Product Form
-- [ ] In `frontend/src/app/admin/products/new/page.tsx` and `[id]/edit/page.tsx`:
+- [x] In `frontend/src/app/admin/products/new/page.tsx` and `[id]/edit/page.tsx`:
   - Add a `+ New Category` button next to the Category dropdown.
   - Clicking opens a lightweight `QuickAddCategoryDialog`.
   - On submit:
@@ -226,7 +226,7 @@ Provide a dedicated Category Management system where admins can create, view, ed
 - [x] Default threshold remains 5 if unspecified.
 
 ### Category Management:
-- [ ] Admin can view, create, edit, and disable categories from `/admin/categories`.
-- [ ] Categories support English, Sinhala, and Tamil names.
-- [ ] Admin can create a new category directly from the `/admin/products/new` screen without losing unsaved product data.
-- [ ] Storefront category filter bar dynamically displays all active categories in the customer's selected language.
+- [x] Admin can view, create, edit, and disable categories from `/admin/categories`.
+- [x] Categories support English, Sinhala, and Tamil names.
+- [x] Admin can create a new category directly from the `/admin/products/new` screen without losing unsaved product data.
+- [x] Storefront category filter bar dynamically displays all active categories in the customer's selected language.
