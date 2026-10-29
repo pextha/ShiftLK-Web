@@ -1,6 +1,6 @@
 # ShiftLK Spares — Development Task Roadmap (`task.md`)
 
-This document defines the actionable development tasks, architectural requirements, step-by-step external setup guidelines, and acceptance criteria for **ShiftLK Motorbike Spares**.
+This document defines the actionable development tasks, architectural requirements, step-by-step external setup guidelines, and acceptance criteria to bring **ShiftLK Motorbike Spares** to 100% production completion.
 
 ---
 
@@ -11,6 +11,12 @@ This document defines the actionable development tasks, architectural requiremen
 | **1** | **Cloudflare R2 Object Storage Integration** | Store product images in Cloudflare R2 bucket with edge delivery | High | ✅ Completed |
 | **2** | **Custom Product Low Stock Threshold** | Allow admins to define custom low stock alerts per product | Medium | ✅ Completed |
 | **3** | **Admin Category Management & Selection** | Full CRUD for categories + in-form quick category creation | High | ⏳ Pending |
+| **4** | **Admin Brand Management & Quick Creation** | Full CRUD for brands + in-form `+ New Brand` modal in product forms | High | ⏳ Pending |
+| **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ⏳ Pending |
+| **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ⏳ Pending |
+| **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ⏳ Pending |
+| **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ⏳ Pending |
+| **9** | **Admin Audit Logs Viewer & Password Reset** | UI for `/api/v1/admin/audit-logs` + Admin/Staff password reset in Settings | Low | ⏳ Pending |
 
 ---
 
@@ -177,7 +183,7 @@ Provide a dedicated Category Management system where admins can create, view, ed
   - `POST /api/v1/admin/categories` — Create category and `category_translations` atomically in Prisma transaction.
   - `PUT /api/v1/admin/categories/:id` — Update slug, icon, display order, isActive, and translation records.
   - `DELETE /api/v1/admin/categories/:id` — Prevent deletion if products are linked (return 400 with linked count), or allow soft-delete (`isActive: false`).
-- [ ] Register admin routes in `backend/src/modules/categories/categories.routes.ts` protected by `authGuard` and `requireRole(['ADMIN'])`.
+- [ ] Register admin routes in `backend/src/modules/categories/categories.routes.ts` (or `admin.categories.routes.ts` mounted at `/api/v1/admin/categories` in `app.ts`) protected by `requireAuth` and `requireRole(['ADMIN'])`.
 
 #### 2. Admin UI: Dedicated Categories Page (`frontend/src/app/admin/categories/page.tsx`)
 - [ ] Create `/admin/categories` page displaying:
@@ -192,13 +198,15 @@ Provide a dedicated Category Management system where admins can create, view, ed
     - Actions (Edit, Toggle Status, Delete)
 - [ ] Create `CategoryModal.tsx` for creating/editing categories:
   - Auto-generate slug from English name.
-  - Icon picker (popular Lucide motorbike icons: `Wrench`, `Cog`, `Disc`, `Zap`, `Shield`, `Activity`, `Gauge`, `Layers`).
+  - Icon picker (popular Lucide motorbike icons: `Wrench`, `Cog`, `Disc`, `Zap`, `Shield`, `Activity`, `Gauge`, `Layers`, `Flame`, `Palette`, `Bike`).
   - Trilingual tabs or stacked inputs for `English`, `Sinhala (සිංහල)`, and `Tamil (தமிழ்)`.
   - Display order input and active status toggle.
 
-#### 3. Admin UI: Navigation Integration
+#### 3. Admin UI: Navigation Integration & Storefront Dynamic Icon Mapping
 - [ ] In `frontend/src/components/admin/layout/AdminSidebar.tsx`:
   - Add `Categories` navigation item with `Layers` icon under `/admin/categories`.
+- [ ] In `frontend/src/app/[locale]/page.tsx`:
+  - Update `getCategoryIcon` to dynamically render the category's configured `icon` field (with fallback to slug/default) so newly created categories render their chosen icon on the storefront home page.
 
 #### 4. Admin UI: In-Form Quick Category Creation in Product Form
 - [ ] In `frontend/src/app/admin/products/new/page.tsx` and `[id]/edit/page.tsx`:
@@ -212,21 +220,136 @@ Provide a dedicated Category Management system where admins can create, view, ed
 
 ---
 
+## 🏷️ Task 4: Admin Brand Management & In-Form Quick Brand Creation
+
+### 4.1 Objective
+Currently, `backend/src/modules/brands/` only exposes a read-only `GET /api/v1/brands` endpoint, leaving admins unable to add new motorbike or accessory brands (e.g., TVS, Hero, Studds, Vega, Brembo, NGK, Motul) from the Admin Portal. Provide full Admin CRUD for Brands and a quick `+ New Brand` modal inside the Product Create/Edit forms.
+
+### 4.2 Technical Implementation Plan for Task 4
+- [ ] **Backend (`backend/src/modules/brands/`):**
+  - Create `brands.schema.ts` (`name`, `slug`, `country`, `isActive`).
+  - Implement Admin Brand endpoints:
+    - `GET /api/v1/admin/brands` — List all brands with linked product counts (`_count.products`).
+    - `POST /api/v1/admin/brands` — Create a new brand with unique slug validation and audit log.
+    - `PUT /api/v1/admin/brands/:id` — Update brand name, slug, country, or active status.
+    - `DELETE /api/v1/admin/brands/:id` — Block deletion if products are linked (return 400 with count).
+- [ ] **Admin UI (`frontend/src/app/admin/`):**
+  - Create `/admin/brands` management page (or integrate with `/admin/categories` & sidebar navigation) to view, add, edit, and toggle brands.
+  - In `frontend/src/app/admin/products/new/page.tsx` and `[id]/edit/page.tsx`, add a `+ New Brand` trigger next to the Brand selector that creates the brand, refreshes `['brands']`, and auto-selects it in the form.
+
+---
+
+## 📍 Task 5: Customer Order Tracking Portal (`/[locale]/track-order`)
+
+### 5.1 Objective
+The backend already provides `GET /api/v1/orders/:code?phone=...` (`ordersService.getOrderByCodeAndPhone`) and `apiClient.getOrderStatus(code, phone)`, but there is no storefront page for customers to track their orders. Build a trilingual Order Tracking page so customers can check live order progression (`PENDING` → `CONFIRMED` → `SHIPPED` → `DELIVERED`) and view their courier tracking number.
+
+### 5.2 Technical Implementation Plan for Task 5
+- [ ] **Storefront Page (`frontend/src/app/[locale]/track-order/page.tsx`):**
+  - Search form accepting **Order Code** (e.g., `SLK-000125`) and **Sri Lankan Phone Number** (`07X XXX XXXX`).
+  - Support URL query pre-filling (`?code=SLK-000125&phone=...`) so links shared on WhatsApp open directly.
+  - Visual 4-step status timeline (`Order Placed`, `Confirmed & Packed`, `Handed to Courier`, `Delivered`) with cancellation handling.
+  - Display courier tracking number badge, itemized parts list, delivery district, and total COD amount.
+- [ ] **Navigation & Localization (`frontend/messages/{en,si,ta}.json`):**
+  - Add trilingual translation keys under `trackOrder` and `nav.trackOrder`.
+  - Add "Track Order" link in `Header.tsx` and `Footer.tsx`.
+
+---
+
+## 🛒 Task 6: Multi-Item Shopping Cart & Combined WhatsApp Checkout
+
+### 6.1 Objective
+Currently, customers can only order a single product at a time from the product detail page, even though `POST /api/v1/orders` in the backend already supports multi-item arrays (`items: Array<{ productId, qty }>`) and combined weight shipping calculations. Enable customers to add multiple parts into a shopping cart and place a single consolidated order.
+
+### 6.2 Technical Implementation Plan for Task 6
+- [ ] **Cart State (`frontend/src/lib/cart-context.tsx`):**
+  - Persistent `localStorage` cart storing `{ product, qty }` with `addItem`, `updateQty`, `removeItem`, `clearCart`, total items count, and combined weight calculation.
+- [ ] **Cart UI (`frontend/src/components/cart/CartDrawer.tsx`):**
+  - Add Cart button with live item count badge in `Header.tsx`.
+  - Add "Add to Cart" button alongside "Order via WhatsApp" in `ProductCard.tsx` and `LiveOrderSummary.tsx`.
+  - Slide-over `CartDrawer` with district selector, live combined weight courier fee calculation (`Rs. 425` first kg + `Rs. 100/kg` extra, or `Rs. 220` Speed Post if all items are stickers `< 250g`), and multi-item WhatsApp checkout submission via `/api/orders`.
+- [ ] **Update `/api/orders` & `orderService.ts`:**
+  - Support both single-item (`productId`, `quantity`) and multi-item (`items: [{ productId, qty }]`) payloads seamlessly.
+
+---
+
+## 🔄 Task 7: Dynamic Settings, Staff Privacy & Storefront Data Sync Fixes
+
+### 7.1 Objective
+Resolve remaining hardcoded values, seed-data fallbacks, and staff permission gaps between the Backend and Frontend.
+
+### 7.2 Technical Implementation Plan for Task 7
+- [ ] **Fix Analytics Overview Low-Stock Count Bug (`backend/src/modules/analytics/analytics.service.ts`):**
+  - In `getOverview()`, replace hardcoded `stockQty: { lte: 3 }` with dynamic per-product comparison (`stockQty <= lowStockThreshold`) so the Dashboard KPI card count matches `getLowStock()` and `/admin/stock`.
+- [ ] **Per-Product Low Stock Badge on Storefront (`backend/src/utils/serializers.ts` & `frontend/`):**
+  - Include `low_stock_threshold` in `toPublicProductDto` and `LocalizedProduct` so `ProductCard.tsx` and `LiveOrderSummary.tsx` use `product.low_stock_threshold` instead of hardcoded `5`.
+- [ ] **Enforce `hideProfitFromStaff` System Setting:**
+  - When `SystemSetting.hideProfitFromStaff` is `true` and the logged-in user has role `STAFF`:
+    - Strip or mask `grossProfit`, `netProfit`, `cogs`, and `costPrice` in `/admin/dashboard`, `/admin/products`, `/admin/orders/[id]`, and `/admin/reports`.
+- [ ] **Dynamic Business WhatsApp Number:**
+  - Expose public store config (`whatsappNumber`) from `SystemSetting` and use it in `orders.service.ts` (`getWhatsAppUrl`) as well as storefront WhatsApp CTAs.
+- [ ] **Dynamic Sitemap & Vehicle Make/Model Filter:**
+  - Update `frontend/src/app/sitemap.ts` to fetch live active product slugs from `/api/v1/products` (with fallback to seed slugs if offline).
+  - Update `getAllMakesAndModels()` in `frontend/src/services/productService.ts` to merge live vehicle compatibilities from the backend.
+
+---
+
+## 📄 Task 8: Storefront Catalog Pagination & Local/R2 Image Rendering Polish
+
+### 8.1 Objective
+Allow storefront visitors to browse across multiple pages of spare parts on `/[locale]/products` and ensure product images served from either Cloudflare R2 or the local backend media proxy render without Next.js private-IP errors.
+
+### 8.2 Technical Implementation Plan for Task 8
+- [ ] **Catalog Pagination (`frontend/src/app/[locale]/products/page.tsx` & `productService.ts`):**
+  - Return `{ items, pagination }` from `getProducts()` and render Previous / Page Numbers / Next pagination controls at the bottom of `/[locale]/products` preserving active search/filter query params.
+- [ ] **Image Rendering Resilience (`ProductCard.tsx` & `ProductGallery.tsx`):**
+  - Normalize relative media paths (`/api/v1/media/...`) and set `unoptimized` on `<Image />` when the URL points to `localhost` / `127.0.0.1` in development, while keeping full Next.js optimization for Cloudflare R2 CDN URLs.
+
+---
+
+## 🛡️ Task 9: Admin Audit Logs Viewer & Staff Password Management
+
+### 9.1 Objective
+Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in the Admin Portal and allow admins to change passwords or reset staff member passwords.
+
+### 9.2 Technical Implementation Plan for Task 9
+- [ ] **Audit Logs Tab in `/admin/settings` (`frontend/src/app/admin/settings/page.tsx`):**
+  - Add an **Audit Trail** tab (Admin-only) displaying timestamp, staff member, action badge (`CREATE_PRODUCT`, `RESTOCK_PRODUCT`, `UPDATE_ORDER_STATUS`, etc.), entity ID, IP address, and change details with pagination.
+- [ ] **Password Reset / Update (`backend/src/modules/users/` & `/admin/settings`):**
+  - Add `PATCH /api/v1/admin/users/:id/password` endpoint allowing admins to reset a staff user's password (or change their own password) with bcrypt hashing and audit logging.
+  - Add a "Reset Password" modal button in the Staff & Personnel table in `/admin/settings`.
+
+---
+
 ## 🎯 Verification & Acceptance Checklist
 
-### Cloudflare R2:
+### Cloudflare R2 (Task 1):
 - [x] R2 bucket created (`shiftlk-dev-media`), credentials set in `.env`, and live connection verified.
 - [x] Admin can drag-and-drop or pick multiple images in `/admin/products/new` and `/admin/products/[id]/edit`.
 - [x] Images upload directly to Cloudflare R2 with progress feedback, primary cover selection, and reordering.
 - [x] Product images stream directly from R2 via CDN and fallback media endpoint.
 
-### Low Stock Threshold:
+### Low Stock Threshold (Task 2):
 - [x] Admin can enter a custom low stock threshold (e.g. `12`) when adding a product.
 - [x] Product displays low stock warnings in `/admin/stock` when quantity drops to 12.
 - [x] Default threshold remains 5 if unspecified.
 
-### Category Management:
+### Category Management (Task 3):
 - [ ] Admin can view, create, edit, and disable categories from `/admin/categories`.
 - [ ] Categories support English, Sinhala, and Tamil names.
-- [ ] Admin can create a new category directly from the `/admin/products/new` screen without losing unsaved product data.
-- [ ] Storefront category filter bar dynamically displays all active categories in the customer's selected language.
+- [ ] Admin can create a new category directly from `/admin/products/new` and `/admin/products/[id]/edit` without losing unsaved product data.
+- [ ] Storefront category filter bar and home page dynamically display all active categories and icons in the customer's selected language.
+
+### Brand Management (Task 4):
+- [ ] Admin can view, create, edit, and delete brands from the Admin Portal.
+- [ ] Admin can quickly add a new brand directly inside the product create/edit forms.
+
+### Customer Order Tracking & Cart (Tasks 5 & 6):
+- [ ] Customers can look up live order status on `/[locale]/track-order` using their Order Code and Sri Lankan phone number.
+- [ ] Customers can add multiple spare parts to the cart drawer and submit a combined WhatsApp order with accurate weight-based delivery fees.
+
+### Data Sync, Pagination & Security (Tasks 7, 8 & 9):
+- [ ] Dashboard Low Stock KPI count accurately matches per-product `lowStockThreshold`.
+- [ ] Enabling `hideProfitFromStaff` hides cost and profit metrics from `STAFF` users.
+- [ ] Storefront `/products` supports multi-page pagination.
+- [ ] Admin can view system audit logs and reset staff passwords in `/admin/settings`.
