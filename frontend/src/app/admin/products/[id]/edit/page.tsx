@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/common/Toast';
 import { ImageUploadDropzone } from '@/components/admin/ui/ImageUploadDropzone';
+import { QuickAddCategoryDialog } from '@/components/admin/categories/QuickAddCategoryDialog';
 
 interface CompatibilityItem {
   make: string;
@@ -53,6 +54,7 @@ export default function EditProductPage() {
   const [slug, setSlug] = useState('');
   const [brandId, setBrandId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [quickCategoryOpen, setQuickCategoryOpen] = useState(false);
   const [condition, setCondition] = useState<'NEW' | 'RECONDITIONED' | 'USED'>('NEW');
 
   // Translations
@@ -84,10 +86,15 @@ export default function EditProductPage() {
     queryFn: () => apiClient<any[]>('/api/v1/brands'),
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: rawCategories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiClient<any[]>('/api/v1/categories'),
   });
+  const categories: any[] = Array.isArray(rawCategories)
+    ? rawCategories
+    : Array.isArray((rawCategories as any)?.data)
+    ? (rawCategories as any).data
+    : [];
 
   // Fetch Existing Product
   const { data: product, isLoading: loadingProduct } = useQuery({
@@ -396,9 +403,19 @@ export default function EditProductPage() {
 
               {/* Category */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Category *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Category *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setQuickCategoryOpen(true)}
+                    className="text-[11px] text-brand-neon hover:underline font-medium flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    New
+                  </button>
+                </div>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
@@ -772,6 +789,12 @@ export default function EditProductPage() {
           </Card>
         </div>
       </div>
+
+      <QuickAddCategoryDialog
+        isOpen={quickCategoryOpen}
+        onClose={() => setQuickCategoryOpen(false)}
+        onCategoryCreated={(newCat) => setCategoryId(newCat.id)}
+      />
     </form>
   );
 }

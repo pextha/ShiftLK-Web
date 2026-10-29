@@ -171,7 +171,7 @@ export async function getFeaturedProducts(
 
 export async function getAllCategories(locale: AppLocale = 'en') {
   try {
-    const cats = await apiClient.getCategories();
+    const cats = await apiClient.getCategories(locale);
     if (cats && cats.length > 0) {
       return cats.map((c) => ({
         id: c.id,

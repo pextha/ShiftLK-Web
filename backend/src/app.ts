@@ -16,8 +16,8 @@ import brandsRoutes from './modules/brands/brands.routes';
 import deliveryRoutes from './modules/delivery/delivery.routes';
 import ordersRoutes from './modules/orders/orders.routes';
 
-// Admin Module Routes
 import adminAuthRoutes from './modules/auth/auth.routes';
+import adminCategoriesRoutes from './modules/categories/admin.categories.routes';
 import adminProductsRoutes from './modules/products/admin.products.routes';
 import adminOrdersRoutes from './modules/orders/admin.orders.routes';
 import adminExpensesRoutes from './modules/expenses/expenses.routes';
@@ -107,6 +107,7 @@ app.use('/api/v1/orders', ordersRoutes);
 
 // API v1 Admin Routes
 app.use('/api/v1/admin/auth', adminAuthRoutes);
+app.use('/api/v1/admin/categories', adminCategoriesRoutes);
 app.use('/api/v1/admin/products', adminProductsRoutes);
 app.use('/api/v1/admin/orders', adminOrdersRoutes);
 app.use('/api/v1/admin/expenses', adminExpensesRoutes);

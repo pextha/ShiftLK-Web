@@ -70,7 +70,11 @@ export default function SettingsPage() {
   });
 
   const deliveryZones = settingsData?.deliveryZones || [];
-  const usersList = usersData?.data || [];
+  const usersList: any[] = Array.isArray(usersData)
+    ? usersData
+    : Array.isArray(usersData?.data)
+    ? usersData.data
+    : [];
 
   // Populate System Settings when data loads
   useEffect(() => {

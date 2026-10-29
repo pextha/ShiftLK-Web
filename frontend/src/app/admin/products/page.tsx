@@ -64,10 +64,15 @@ export default function ProductsPage() {
   const [productToDelete, setProductToDelete] = useState<any | null>(null);
 
   // Fetch Categories for dropdown
-  const { data: categories = [] } = useQuery({
+  const { data: rawCategories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiClient<any[]>('/api/v1/categories'),
   });
+  const categories: any[] = Array.isArray(rawCategories)
+    ? rawCategories
+    : Array.isArray((rawCategories as any)?.data)
+    ? (rawCategories as any).data
+    : [];
 
   // Fetch Products with pagination & filters
   const { data: productData, isLoading, refetch } = useQuery({
