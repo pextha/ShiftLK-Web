@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { AppLocale, DeliveryZone, LocalizedProduct } from '@/lib/db/schema.types';
 import { formatLKR } from '@/lib/utils/currency';
 import { validateSriLankanPhone } from '@/lib/utils/phone-validator';
@@ -14,6 +15,7 @@ import {
   Loader2,
   ExternalLink,
   ShieldCheck,
+  PackageSearch,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
@@ -38,7 +40,7 @@ export default function WhatsAppOrderModal({
 }: WhatsAppOrderModalProps) {
   const locale = useLocale() as AppLocale;
   const t = useTranslations('orderModal');
-  const tProd = useTranslations('product');
+  const tNav = useTranslations('nav');
 
   // Form State
   const [customerName, setCustomerName] = useState('');
@@ -224,10 +226,19 @@ export default function WhatsAppOrderModal({
                   <ExternalLink className="w-4 h-4 ml-1 opacity-80" />
                 </a>
 
+                <Link
+                  href={`/track-order?code=${encodeURIComponent(successOrder.orderCode)}&phone=${encodeURIComponent(phone)}`}
+                  onClick={onClose}
+                  className="w-full flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-800 border border-brand-neon/30 text-brand-neon font-bold py-3 px-6 rounded-2xl transition-all text-xs"
+                >
+                  <PackageSearch className="w-4 h-4" />
+                  <span>{tNav('trackOrder')} ({successOrder.orderCode})</span>
+                </Link>
+
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                  className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
                 >
                   Close Window
                 </button>

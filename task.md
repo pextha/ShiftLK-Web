@@ -12,7 +12,7 @@ This document defines the actionable development tasks, architectural requiremen
 | **2** | **Custom Product Low Stock Threshold** | Allow admins to define custom low stock alerts per product | Medium | ✅ Completed |
 | **3** | **Admin Category Management & Selection** | Full CRUD for categories + in-form quick category creation | High | ✅ Completed |
 | **4** | **Admin Brand Management & Quick Creation** | Full CRUD for brands + in-form `+ New Brand` modal in product forms | High | ✅ Completed |
-| **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ⏳ Pending |
+| **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ✅ Completed |
 | **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ⏳ Pending |
 | **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ⏳ Pending |
 | **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ⏳ Pending |
@@ -243,12 +243,12 @@ Currently, `backend/src/modules/brands/` only exposes a read-only `GET /api/v1/b
 The backend already provides `GET /api/v1/orders/:code?phone=...` (`ordersService.getOrderByCodeAndPhone`) and `apiClient.getOrderStatus(code, phone)`, but there is no storefront page for customers to track their orders. Build a trilingual Order Tracking page so customers can check live order progression (`PENDING` → `CONFIRMED` → `SHIPPED` → `DELIVERED`) and view their courier tracking number.
 
 ### 5.2 Technical Implementation Plan for Task 5
-- [ ] **Storefront Page (`frontend/src/app/[locale]/track-order/page.tsx`):**
+- [x] **Storefront Page (`frontend/src/app/[locale]/track-order/page.tsx`):**
   - Search form accepting **Order Code** (e.g., `SLK-000125`) and **Sri Lankan Phone Number** (`07X XXX XXXX`).
   - Support URL query pre-filling (`?code=SLK-000125&phone=...`) so links shared on WhatsApp open directly.
   - Visual 4-step status timeline (`Order Placed`, `Confirmed & Packed`, `Handed to Courier`, `Delivered`) with cancellation handling.
   - Display courier tracking number badge, itemized parts list, delivery district, and total COD amount.
-- [ ] **Navigation & Localization (`frontend/messages/{en,si,ta}.json`):**
+- [x] **Navigation & Localization (`frontend/messages/{en,si,ta}.json`):**
   - Add trilingual translation keys under `trackOrder` and `nav.trackOrder`.
   - Add "Track Order" link in `Header.tsx` and `Footer.tsx`.
 
@@ -343,7 +343,7 @@ Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in t
 - [x] Admin can quickly add a new brand directly inside the product create/edit forms.
 
 ### Customer Order Tracking & Cart (Tasks 5 & 6):
-- [ ] Customers can look up live order status on `/[locale]/track-order` using their Order Code and Sri Lankan phone number.
+- [x] Customers can look up live order status on `/[locale]/track-order` using their Order Code and Sri Lankan phone number.
 - [ ] Customers can add multiple spare parts to the cart drawer and submit a combined WhatsApp order with accurate weight-based delivery fees.
 
 ### Data Sync, Pagination & Security (Tasks 7, 8 & 9):

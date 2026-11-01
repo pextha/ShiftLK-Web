@@ -121,15 +121,19 @@ export function toPublicOrderDto(order: any) {
     subtotal: Number(order.subtotal),
     total: Number(order.total),
     status: order.status,
+    courierTrackingNo: order.courierTrackingNo || null,
     customerLanguage: order.customerLanguage,
     notes: order.notes,
     createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
     items: Array.isArray(order.items)
       ? order.items.map((item: any) => ({
           productId: item.productId,
           qty: item.qty,
           unitPrice: Number(item.unitPrice),
           productName: item.product?.translations?.[0]?.name || item.product?.slug || '',
+          partNumber: item.product?.partNumber || '',
+          slug: item.product?.slug || '',
         }))
       : [],
   };
