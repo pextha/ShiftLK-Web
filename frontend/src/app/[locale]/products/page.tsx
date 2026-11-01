@@ -9,7 +9,7 @@ import {
 } from '@/services/productService';
 import ProductFilterBar from '@/components/products/ProductFilterBar';
 import ProductCard from '@/components/products/ProductCard';
-import { Wrench, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
 interface ProductsPageProps {
@@ -53,28 +53,28 @@ export default async function ProductsPage({
   const appLocale = locale as AppLocale;
   const sParams = await searchParams;
 
-  const tFilters = await getTranslations('filters');
   const tSearch = await getTranslations('search');
 
   // Filter options
-  const categories = await getAllCategories(appLocale);
-  const brands = await getAllBrands();
-  const makesAndModels = getAllMakesAndModels();
+  const [categories, brands, products] = await Promise.all([
+    getAllCategories(appLocale),
+    getAllBrands(),
+    getProducts(appLocale, {
+      query: sParams.q,
+      categorySlug: sParams.category,
+      brand: sParams.brand,
+      condition: sParams.condition as ConditionType | 'all',
+      make: sParams.make,
+      model: sParams.model,
+      year: sParams.year ? parseInt(sParams.year) : undefined,
+      minPrice: sParams.minPrice ? parseFloat(sParams.minPrice) : undefined,
+      maxPrice: sParams.maxPrice ? parseFloat(sParams.maxPrice) : undefined,
+      inStockOnly: sParams.inStock === 'true',
+      sortBy: sParams.sort,
+    }),
+  ]);
 
-  // Execute query
-  const products = await getProducts(appLocale, {
-    query: sParams.q,
-    categorySlug: sParams.category,
-    brand: sParams.brand,
-    condition: sParams.condition as ConditionType | 'all',
-    make: sParams.make,
-    model: sParams.model,
-    year: sParams.year ? parseInt(sParams.year) : undefined,
-    minPrice: sParams.minPrice ? parseFloat(sParams.minPrice) : undefined,
-    maxPrice: sParams.maxPrice ? parseFloat(sParams.maxPrice) : undefined,
-    inStockOnly: sParams.inStock === 'true',
-    sortBy: sParams.sort,
-  });
+  const makesAndModels = getAllMakesAndModels(products);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">

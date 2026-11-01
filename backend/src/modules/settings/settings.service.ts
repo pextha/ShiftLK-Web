@@ -1,6 +1,17 @@
 import { prisma } from '../../lib/prisma';
 
 export class SettingsService {
+  async getPublicSettings() {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { id: 'default' },
+    });
+
+    return {
+      whatsappNumber: setting?.whatsappNumber || '+94770871018',
+      defaultLowStockAlert: setting?.defaultLowStockAlert ?? 5,
+    };
+  }
+
   async getSettings() {
     let setting = await prisma.systemSetting.findUnique({
       where: { id: 'default' },

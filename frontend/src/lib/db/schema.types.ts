@@ -30,6 +30,7 @@ export interface Product {
   selling_price: number;
   cost_price?: number; // Kept private, excluded from public queries
   stock_qty: number;
+  low_stock_threshold?: number;
   weight_kg: number;
   is_active: boolean;
   images: string[];
@@ -111,6 +112,7 @@ export interface LocalizedProduct {
   condition: ConditionType;
   selling_price: number;
   stock_qty: number;
+  low_stock_threshold?: number;
   weight_kg: number;
   is_active: boolean;
   images: string[];

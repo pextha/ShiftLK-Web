@@ -14,7 +14,7 @@ This document defines the actionable development tasks, architectural requiremen
 | **4** | **Admin Brand Management & Quick Creation** | Full CRUD for brands + in-form `+ New Brand` modal in product forms | High | ✅ Completed |
 | **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ✅ Completed |
 | **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ✅ Completed |
-| **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ⏳ Pending |
+| **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ✅ Completed |
 | **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ⏳ Pending |
 | **9** | **Admin Audit Logs Viewer & Password Reset** | UI for `/api/v1/admin/audit-logs` + Admin/Staff password reset in Settings | Low | ⏳ Pending |
 
@@ -277,16 +277,16 @@ Currently, customers can only order a single product at a time from the product 
 Resolve remaining hardcoded values, seed-data fallbacks, and staff permission gaps between the Backend and Frontend.
 
 ### 7.2 Technical Implementation Plan for Task 7
-- [ ] **Fix Analytics Overview Low-Stock Count Bug (`backend/src/modules/analytics/analytics.service.ts`):**
+- [x] **Fix Analytics Overview Low-Stock Count Bug (`backend/src/modules/analytics/analytics.service.ts`):**
   - In `getOverview()`, replace hardcoded `stockQty: { lte: 3 }` with dynamic per-product comparison (`stockQty <= lowStockThreshold`) so the Dashboard KPI card count matches `getLowStock()` and `/admin/stock`.
-- [ ] **Per-Product Low Stock Badge on Storefront (`backend/src/utils/serializers.ts` & `frontend/`):**
+- [x] **Per-Product Low Stock Badge on Storefront (`backend/src/utils/serializers.ts` & `frontend/`):**
   - Include `low_stock_threshold` in `toPublicProductDto` and `LocalizedProduct` so `ProductCard.tsx` and `LiveOrderSummary.tsx` use `product.low_stock_threshold` instead of hardcoded `5`.
-- [ ] **Enforce `hideProfitFromStaff` System Setting:**
+- [x] **Enforce `hideProfitFromStaff` System Setting:**
   - When `SystemSetting.hideProfitFromStaff` is `true` and the logged-in user has role `STAFF`:
     - Strip or mask `grossProfit`, `netProfit`, `cogs`, and `costPrice` in `/admin/dashboard`, `/admin/products`, `/admin/orders/[id]`, and `/admin/reports`.
-- [ ] **Dynamic Business WhatsApp Number:**
+- [x] **Dynamic Business WhatsApp Number:**
   - Expose public store config (`whatsappNumber`) from `SystemSetting` and use it in `orders.service.ts` (`getWhatsAppUrl`) as well as storefront WhatsApp CTAs.
-- [ ] **Dynamic Sitemap & Vehicle Make/Model Filter:**
+- [x] **Dynamic Sitemap & Vehicle Make/Model Filter:**
   - Update `frontend/src/app/sitemap.ts` to fetch live active product slugs from `/api/v1/products` (with fallback to seed slugs if offline).
   - Update `getAllMakesAndModels()` in `frontend/src/services/productService.ts` to merge live vehicle compatibilities from the backend.
 
@@ -347,7 +347,7 @@ Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in t
 - [x] Customers can add multiple spare parts to the cart drawer and submit a combined WhatsApp order with accurate weight-based delivery fees.
 
 ### Data Sync, Pagination & Security (Tasks 7, 8 & 9):
-- [ ] Dashboard Low Stock KPI count accurately matches per-product `lowStockThreshold`.
-- [ ] Enabling `hideProfitFromStaff` hides cost and profit metrics from `STAFF` users.
+- [x] Dashboard Low Stock KPI count accurately matches per-product `lowStockThreshold`.
+- [x] Enabling `hideProfitFromStaff` hides cost and profit metrics from `STAFF` users.
 - [ ] Storefront `/products` supports multi-page pagination.
 - [ ] Admin can view system audit logs and reset staff passwords in `/admin/settings`.

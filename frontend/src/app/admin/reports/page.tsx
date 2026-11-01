@@ -6,15 +6,11 @@ import {
   TrendingUp,
   Download,
   Printer,
-  Calendar,
   DollarSign,
   Package,
-  ShoppingBag,
-  Percent,
   Receipt,
-  Layers,
   MapPin,
-  RefreshCw,
+  Lock,
 } from 'lucide-react';
 import {
   BarChart,
@@ -30,18 +26,18 @@ import { apiClient } from '@/lib/api-client';
 import { formatLKR, cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ReportsPage() {
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
 
-  const { data: reportData, isLoading, refetch } = useQuery({
+  const { data: reportData, isLoading } = useQuery({
     queryKey: ['admin-reports', period],
     queryFn: () => apiClient<any>(`/api/v1/admin/analytics/reports?period=${period}`),
   });
 
   const summary = reportData?.summary;
+  const hideProfit = Boolean(reportData?.hideProfit);
   const timeline = reportData?.timeline || [];
   const topProducts = reportData?.mostProfitableProducts || [];
   const districts = reportData?.ordersByDistrict || [];
@@ -58,21 +54,24 @@ export default function ReportsPage() {
       ['Total Delivered Orders', summary.totalOrders],
       ['Total Items Sold', summary.totalItemsSold],
       ['Merchandise Revenue (LKR)', summary.revenue],
-      ['Cost of Goods Sold (COGS)', summary.cogs],
-      ['Gross Profit (LKR)', summary.grossProfit],
-      ['Gross Margin %', `${summary.grossMarginPercent}%`],
-      ['Total Operating Expenses (LKR)', summary.totalExpenses],
-      ['Net Profit (LKR)', summary.netProfit],
-      ['Net Margin %', `${summary.netMarginPercent}%`],
+      ...(hideProfit
+        ? []
+        : [
+            ['Cost of Goods Sold (COGS)', summary.cogs],
+            ['Gross Profit (LKR)', summary.grossProfit],
+            ['Gross Margin %', `${summary.grossMarginPercent}%`],
+            ['Total Operating Expenses (LKR)', summary.totalExpenses],
+            ['Net Profit (LKR)', summary.netProfit],
+            ['Net Margin %', `${summary.netMarginPercent}%`],
+          ]),
       [],
-      ['Product Part Number', 'Product Name', 'Units Sold', 'Revenue', 'Cost', 'Profit'],
+      ['Product Part Number', 'Product Name', 'Units Sold', 'Revenue', ...(hideProfit ? [] : ['Cost', 'Profit'])],
       ...topProducts.map((p: any) => [
         p.partNumber,
         `"${p.name.replace(/"/g, '""')}"`,
         p.unitsSold,
         p.revenue,
-        p.cost,
-        p.profit,
+        ...(hideProfit ? [] : [p.cost, p.profit]),
       ]),
     ];
 
@@ -194,19 +193,21 @@ export default function ReportsPage() {
               Cost of Goods (COGS)
             </span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-              <Package className="w-4 h-4" />
+              {hideProfit ? <Lock className="w-4 h-4" /> : <Package className="w-4 h-4" />}
             </div>
           </div>
           <div className="mt-3">
             {isLoading ? (
               <Skeleton className="h-8 w-32" />
+            ) : hideProfit ? (
+              <span className="text-lg font-bold text-slate-500">Admin Only</span>
             ) : (
               <h2 className="text-2xl font-black text-slate-300 font-mono">
                 {formatLKR(summary?.cogs ?? 0)}
               </h2>
             )}
             <p className="text-[11px] text-slate-400 mt-1">
-              Supplier purchase cost of sold items
+              {hideProfit ? 'Hidden for staff role' : 'Supplier purchase cost of sold items'}
             </p>
           </div>
         </Card>
@@ -218,12 +219,14 @@ export default function ReportsPage() {
               Gross Profit
             </span>
             <div className="w-8 h-8 rounded-lg bg-brand-neon/10 border border-brand-neon/20 flex items-center justify-center text-brand-neon">
-              <TrendingUp className="w-4 h-4" />
+              {hideProfit ? <Lock className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
             </div>
           </div>
           <div className="mt-3">
             {isLoading ? (
               <Skeleton className="h-8 w-32" />
+            ) : hideProfit ? (
+              <span className="text-lg font-bold text-slate-500">Admin Only</span>
             ) : (
               <div className="flex items-baseline gap-2">
                 <h2 className="text-2xl font-black text-brand-neon">
@@ -234,7 +237,9 @@ export default function ReportsPage() {
                 </span>
               </div>
             )}
-            <p className="text-[11px] text-slate-400 mt-1">Revenue minus inventory cost</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {hideProfit ? 'Hidden for staff role' : 'Revenue minus inventory cost'}
+            </p>
           </div>
         </Card>
 
@@ -245,12 +250,14 @@ export default function ReportsPage() {
               Net Profit
             </span>
             <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-              <Receipt className="w-4 h-4" />
+              {hideProfit ? <Lock className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
             </div>
           </div>
           <div className="mt-3">
             {isLoading ? (
               <Skeleton className="h-8 w-32" />
+            ) : hideProfit ? (
+              <span className="text-lg font-bold text-slate-500">Admin Only</span>
             ) : (
               <div className="flex items-baseline gap-2">
                 <h2 className={cn('text-2xl font-black', (summary?.netProfit ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
@@ -262,7 +269,7 @@ export default function ReportsPage() {
               </div>
             )}
             <p className="text-[11px] text-slate-400 mt-1">
-              After {formatLKR(summary?.totalExpenses ?? 0)} expenses
+              {hideProfit ? 'Hidden for staff role' : `After ${formatLKR(summary?.totalExpenses ?? 0)} expenses`}
             </p>
           </div>
         </Card>
@@ -310,15 +317,19 @@ export default function ReportsPage() {
                           <p className="text-white">
                             Revenue: <span className="font-mono font-bold">{formatLKR(item.revenue)}</span>
                           </p>
-                          <p className="text-brand-neon">
-                            Gross Profit: <span className="font-mono font-bold">{formatLKR(item.grossProfit)}</span>
-                          </p>
-                          <p className="text-purple-400">
-                            Expenses: <span className="font-mono font-bold">{formatLKR(item.expenses)}</span>
-                          </p>
-                          <p className="text-emerald-400 font-black pt-1 border-t border-slate-800">
-                            Net Profit: {formatLKR(item.netProfit)}
-                          </p>
+                          {!hideProfit && (
+                            <>
+                              <p className="text-brand-neon">
+                                Gross Profit: <span className="font-mono font-bold">{formatLKR(item.grossProfit)}</span>
+                              </p>
+                              <p className="text-purple-400">
+                                Expenses: <span className="font-mono font-bold">{formatLKR(item.expenses)}</span>
+                              </p>
+                              <p className="text-emerald-400 font-black pt-1 border-t border-slate-800">
+                                Net Profit: {formatLKR(item.netProfit)}
+                              </p>
+                            </>
+                          )}
                         </div>
                       );
                     }
@@ -327,8 +338,12 @@ export default function ReportsPage() {
                 />
                 <Legend />
                 <Bar dataKey="revenue" name="Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="grossProfit" name="Gross Profit" fill="#ccff00" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="netProfit" name="Net Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                {!hideProfit && (
+                  <>
+                    <Bar dataKey="grossProfit" name="Gross Profit" fill="#ccff00" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="netProfit" name="Net Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </>
+                )}
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -345,16 +360,18 @@ export default function ReportsPage() {
         <Card className="p-6">
           <h2 className="text-base font-bold text-white mb-1 flex items-center gap-2">
             <Package className="w-4 h-4 text-brand-neon" />
-            Top Profitable Products
+            {hideProfit ? 'Top Selling Products' : 'Top Profitable Products'}
           </h2>
           <p className="text-xs text-slate-400 mb-4">
-            Ranked by total net cash profit generated in this period.
+            {hideProfit
+              ? 'Ranked by total units sold in this period.'
+              : 'Ranked by total net cash profit generated in this period.'}
           </p>
 
           <div className="space-y-3">
             {topProducts.length === 0 ? (
               <p className="text-xs text-slate-500 py-6 text-center">
-                No product profit data available yet.
+                No product data available yet.
               </p>
             ) : (
               topProducts.map((p: any, idx: number) => (
@@ -370,9 +387,11 @@ export default function ReportsPage() {
                   </div>
                   <div className="text-right shrink-0 ml-3">
                     <span className="text-xs font-mono font-black text-brand-neon">
-                      {formatLKR(p.profit)}
+                      {formatLKR(hideProfit ? p.revenue : p.profit)}
                     </span>
-                    <p className="text-[10px] text-slate-400">Total Profit</p>
+                    <p className="text-[10px] text-slate-400">
+                      {hideProfit ? 'Total Revenue' : 'Total Profit'}
+                    </p>
                   </div>
                 </div>
               ))

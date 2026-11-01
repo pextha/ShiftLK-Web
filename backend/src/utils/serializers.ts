@@ -7,9 +7,15 @@ export interface PublicProductDto {
   category_id: string;
   category_slug?: string;
   category_name: string;
+  category: {
+    id: string;
+    slug: string;
+    name: string;
+  };
   condition: string;
   selling_price: number;
   stock_qty: number;
+  low_stock_threshold: number;
   weight_kg: number;
   is_active: boolean;
   images: string[];
@@ -83,6 +89,8 @@ export function toPublicProductDto(product: any, locale: string = 'en'): PublicP
       }))
     : [];
 
+  const catSlug = product.category ? product.category.slug : '';
+
   // NOTICE: cost_price and internal fields are completely excluded!
   return {
     id: product.id,
@@ -91,11 +99,17 @@ export function toPublicProductDto(product: any, locale: string = 'en'): PublicP
     brand: product.brand ? product.brand.name : '',
     brand_id: product.brandId,
     category_id: product.categoryId,
-    category_slug: product.category ? product.category.slug : undefined,
+    category_slug: catSlug || undefined,
     category_name: catName,
+    category: {
+      id: product.categoryId,
+      slug: catSlug,
+      name: catName,
+    },
     condition: product.condition ? product.condition.toLowerCase() : 'new',
     selling_price: Number(product.sellingPrice),
     stock_qty: product.stockQty,
+    low_stock_threshold: product.lowStockThreshold ?? 5,
     weight_kg: Number(product.weightKg),
     is_active: product.isActive,
     images,

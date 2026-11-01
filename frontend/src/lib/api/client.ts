@@ -19,7 +19,10 @@ export interface ApiProductItem {
   slug: string;
   part_number: string;
   brand: string;
-  category: {
+  category_id?: string;
+  category_slug?: string;
+  category_name?: string;
+  category?: {
     id: string;
     slug: string;
     name: string;
@@ -27,6 +30,7 @@ export interface ApiProductItem {
   condition: 'new' | 'reconditioned' | 'used';
   selling_price: number;
   stock_qty: number;
+  low_stock_threshold?: number;
   weight_kg: number;
   is_active: boolean;
   name: string;
@@ -234,6 +238,10 @@ export class ApiClient {
       `/orders/${encodeURIComponent(code)}?phone=${encodeURIComponent(phone)}`,
       { method: 'GET', cache: 'no-store' }
     );
+  }
+
+  async getPublicSettings(): Promise<{ whatsappNumber: string; defaultLowStockAlert: number }> {
+    return this.request('/settings/public', { method: 'GET' });
   }
 }
 

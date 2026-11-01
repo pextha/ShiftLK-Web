@@ -13,6 +13,7 @@ import {
   Boxes,
   Clock,
   CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -57,6 +58,8 @@ export default function DashboardPage() {
     queryKey: ['admin-low-stock'],
     queryFn: () => apiClient<any[]>('/api/v1/admin/analytics/low-stock'),
   });
+
+  const hideProfit = Boolean(overview?.hideProfit);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -118,12 +121,16 @@ export default function DashboardPage() {
               Gross Profit
             </span>
             <div className="w-8 h-8 rounded-lg bg-brand-neon/10 border border-brand-neon/20 flex items-center justify-center text-brand-neon">
-              <TrendingUp className="w-4 h-4" />
+              {hideProfit ? <Lock className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
             </div>
           </div>
           <div className="mt-3">
             {overviewLoading ? (
               <Skeleton className="h-8 w-32" />
+            ) : hideProfit ? (
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-slate-500">Admin Only</span>
+              </div>
             ) : (
               <div className="flex items-baseline gap-2">
                 <h2 className="text-2xl font-black text-brand-neon">
@@ -134,7 +141,9 @@ export default function DashboardPage() {
                 </span>
               </div>
             )}
-            <p className="text-[11px] text-slate-400 mt-1">Revenue minus COGS</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {hideProfit ? 'Profit visibility disabled for staff' : 'Revenue minus COGS'}
+            </p>
           </div>
         </Card>
 
