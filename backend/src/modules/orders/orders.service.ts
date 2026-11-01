@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma';
 import { AppError } from '../../middlewares/errorHandler';
 import { validateSriLankanPhone } from '../../utils/phoneValidator';
 import { buildWhatsAppOrderMessage, getWhatsAppUrl } from '../../utils/whatsapp';
+import { formatLKR } from '../../utils/currency';
 import { deliveryService } from '../delivery/delivery.service';
 import { generateNextOrderCode } from '../../utils/orderCode';
 import { toPublicOrderDto } from '../../utils/serializers';
@@ -39,7 +40,7 @@ export class OrdersService {
     // 4. Validate and price all products against database
     let subtotal = 0;
     let totalWeightKg = 0;
-    let hasBodyStickers = false;
+    let allItemsAreStickers = input.items.length > 0;
 
     const validatedItems: Array<{
       productId: string;
@@ -75,8 +76,8 @@ export class OrdersService {
         );
       }
 
-      if (product.category?.slug === 'body-stickers') {
-        hasBodyStickers = true;
+      if (product.category?.slug !== 'body-stickers') {
+        allItemsAreStickers = false;
       }
 
       const unitPrice = Number(product.sellingPrice);
@@ -104,7 +105,7 @@ export class OrdersService {
     }
 
     // 5. Compute server-side shipping fee
-    const deliveryCost = deliveryService.calculateShipping(zone, totalWeightKg, hasBodyStickers);
+    const deliveryCost = deliveryService.calculateShipping(zone, totalWeightKg, allItemsAreStickers);
     const grandTotal = subtotal + deliveryCost;
 
     // 6. Atomic Transaction: generate order code and insert order + items
@@ -140,14 +141,32 @@ export class OrdersService {
 
     // 7. Generate localized WhatsApp message
     const firstItem = validatedItems[0];
+    const itemsSummary =
+      validatedItems.length > 1
+        ? validatedItems
+            .map(
+              (item, idx) =>
+                `  ${idx + 1}. ${item.productName} (#${item.partNumber}) × ${item.qty} = ${formatLKR(
+                  item.unitPrice * item.qty,
+                  input.locale || 'en'
+                )}`
+            )
+            .join('\n')
+        : undefined;
+
     const whatsAppMessage = buildWhatsAppOrderMessage({
       orderCode: createdOrder.orderCode,
-      productName: validatedItems.length === 1 ? firstItem.productName : `${firstItem.productName} + ${validatedItems.length - 1} more items`,
+      productName:
+        validatedItems.length === 1
+          ? firstItem.productName
+          : `${firstItem.productName} + ${validatedItems.length - 1} more items`,
       partNumber: firstItem.partNumber,
       brand: firstItem.brandName,
       condition: firstItem.condition,
       quantity: firstItem.qty,
       unitPrice: firstItem.unitPrice,
+      subtotalOverride: subtotal,
+      itemsSummary,
       district: input.district,
       deliveryCost,
       total: grandTotal,
