@@ -11,7 +11,7 @@ This document defines the actionable development tasks, architectural requiremen
 | **1** | **Cloudflare R2 Object Storage Integration** | Store product images in Cloudflare R2 bucket with edge delivery | High | ✅ Completed |
 | **2** | **Custom Product Low Stock Threshold** | Allow admins to define custom low stock alerts per product | Medium | ✅ Completed |
 | **3** | **Admin Category Management & Selection** | Full CRUD for categories + in-form quick category creation | High | ✅ Completed |
-| **4** | **Admin Brand Management & Quick Creation** | Full CRUD for brands + in-form `+ New Brand` modal in product forms | High | ⏳ Pending |
+| **4** | **Admin Brand Management & Quick Creation** | Full CRUD for brands + in-form `+ New Brand` modal in product forms | High | ✅ Completed |
 | **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ⏳ Pending |
 | **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ⏳ Pending |
 | **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ⏳ Pending |
@@ -224,14 +224,14 @@ Provide a dedicated Category Management system where admins can create, view, ed
 Currently, `backend/src/modules/brands/` only exposes a read-only `GET /api/v1/brands` endpoint, leaving admins unable to add new motorbike or accessory brands (e.g., TVS, Hero, Studds, Vega, Brembo, NGK, Motul) from the Admin Portal. Provide full Admin CRUD for Brands and a quick `+ New Brand` modal inside the Product Create/Edit forms.
 
 ### 4.2 Technical Implementation Plan for Task 4
-- [ ] **Backend (`backend/src/modules/brands/`):**
+- [x] **Backend (`backend/src/modules/brands/`):**
   - Create `brands.schema.ts` (`name`, `slug`, `country`, `isActive`).
   - Implement Admin Brand endpoints:
     - `GET /api/v1/admin/brands` — List all brands with linked product counts (`_count.products`).
     - `POST /api/v1/admin/brands` — Create a new brand with unique slug validation and audit log.
     - `PUT /api/v1/admin/brands/:id` — Update brand name, slug, country, or active status.
     - `DELETE /api/v1/admin/brands/:id` — Block deletion if products are linked (return 400 with count).
-- [ ] **Admin UI (`frontend/src/app/admin/`):**
+- [x] **Admin UI (`frontend/src/app/admin/`):**
   - Create `/admin/brands` management page (or integrate with `/admin/categories` & sidebar navigation) to view, add, edit, and toggle brands.
   - In `frontend/src/app/admin/products/new/page.tsx` and `[id]/edit/page.tsx`, add a `+ New Brand` trigger next to the Brand selector that creates the brand, refreshes `['brands']`, and auto-selects it in the form.
 
@@ -339,8 +339,8 @@ Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in t
 - [x] Storefront category filter bar dynamically displays all active categories in the customer's selected language.
 
 ### Brand Management (Task 4):
-- [ ] Admin can view, create, edit, and delete brands from the Admin Portal.
-- [ ] Admin can quickly add a new brand directly inside the product create/edit forms.
+- [x] Admin can view, create, edit, and delete brands from the Admin Portal.
+- [x] Admin can quickly add a new brand directly inside the product create/edit forms.
 
 ### Customer Order Tracking & Cart (Tasks 5 & 6):
 - [ ] Customers can look up live order status on `/[locale]/track-order` using their Order Code and Sri Lankan phone number.

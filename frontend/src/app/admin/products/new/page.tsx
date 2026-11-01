@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/common/Toast';
 import { ImageUploadDropzone } from '@/components/admin/ui/ImageUploadDropzone';
 import { QuickAddCategoryDialog } from '@/components/admin/categories/QuickAddCategoryDialog';
+import { QuickAddBrandDialog } from '@/components/admin/brands/QuickAddBrandDialog';
 
 interface CompatibilityItem {
   make: string;
@@ -48,6 +49,7 @@ export default function NewProductPage() {
   const [slug, setSlug] = useState('');
   const [brandId, setBrandId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [quickBrandOpen, setQuickBrandOpen] = useState(false);
   const [quickCategoryOpen, setQuickCategoryOpen] = useState(false);
   const [condition, setCondition] = useState<'NEW' | 'RECONDITIONED' | 'USED'>('NEW');
 
@@ -79,10 +81,15 @@ export default function NewProductPage() {
   ]);
 
   // Fetch Brands
-  const { data: brands = [] } = useQuery({
+  const { data: rawBrands = [] } = useQuery({
     queryKey: ['brands'],
     queryFn: () => apiClient<any[]>('/api/v1/brands'),
   });
+  const brands: any[] = Array.isArray(rawBrands)
+    ? rawBrands
+    : Array.isArray((rawBrands as any)?.data)
+    ? (rawBrands as any).data
+    : [];
 
   // Fetch Categories
   const { data: rawCategories = [] } = useQuery({
@@ -339,9 +346,19 @@ export default function NewProductPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Brand */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Brand *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Brand *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setQuickBrandOpen(true)}
+                    className="text-[11px] text-brand-neon hover:underline font-medium flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    New
+                  </button>
+                </div>
                 <select
                   value={brandId}
                   onChange={(e) => setBrandId(e.target.value)}
@@ -739,6 +756,12 @@ export default function NewProductPage() {
           </Card>
         </div>
       </div>
+
+      <QuickAddBrandDialog
+        isOpen={quickBrandOpen}
+        onClose={() => setQuickBrandOpen(false)}
+        onBrandCreated={(newBrand) => setBrandId(newBrand.id)}
+      />
 
       <QuickAddCategoryDialog
         isOpen={quickCategoryOpen}
