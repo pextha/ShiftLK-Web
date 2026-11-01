@@ -68,6 +68,27 @@ export class UsersService {
       },
     });
   }
+
+  async resetPassword(id: string, newPassword: string) {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new AppError('USER_NOT_FOUND', 'User not found', 404);
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    return prisma.user.update({
+      where: { id },
+      data: { passwordHash },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+      },
+    });
+  }
 }
 
 export const usersService = new UsersService();

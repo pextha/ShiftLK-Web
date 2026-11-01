@@ -50,3 +50,24 @@ export async function updateStatus(req: Request, res: Response, next: NextFuncti
     next(error);
   }
 }
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    const updated = await usersService.resetPassword(id, newPassword);
+
+    await auditService.log({
+      userId: req.user?.id,
+      action: 'USER_PASSWORD_RESET',
+      entityType: 'User',
+      entityId: id,
+      newValues: { targetUserEmail: updated.email },
+      ipAddress: req.ip,
+    });
+
+    res.json({ data: { message: 'Password updated successfully', user: updated } });
+  } catch (error) {
+    next(error);
+  }
+}

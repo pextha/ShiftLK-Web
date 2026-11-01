@@ -10,3 +10,7 @@ export const createUserSchema = z.object({
 export const updateUserStatusSchema = z.object({
   isActive: z.boolean(),
 });
+
+export const resetUserPasswordSchema = z.object({
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
