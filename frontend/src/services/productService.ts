@@ -57,10 +57,23 @@ function localizeProduct(
   };
 }
 
-export async function getProducts(
+export interface PaginatedProductsResult {
+  items: LocalizedProduct[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export async function getPaginatedProducts(
   locale: AppLocale = 'en',
   filters: ProductFilterOptions = {}
-): Promise<LocalizedProduct[]> {
+): Promise<PaginatedProductsResult> {
+  const page = filters.page || 1;
+  const limit = filters.limit || 12;
+
   try {
     const apiRes = await apiClient.getProducts({
       query: filters.query,
@@ -74,13 +87,13 @@ export async function getProducts(
       maxPrice: filters.maxPrice,
       inStockOnly: filters.inStockOnly,
       sortBy: filters.sortBy,
-      page: filters.page,
-      limit: filters.limit,
+      page,
+      limit,
       locale,
     });
 
     if (apiRes && Array.isArray(apiRes.items)) {
-      return apiRes.items.map((item) => ({
+      const items = apiRes.items.map((item) => ({
         id: item.id,
         slug: item.slug,
         part_number: item.part_number,
@@ -112,13 +125,38 @@ export async function getProducts(
           ta: { name: item.name, description: item.description },
         },
       }));
+
+      return {
+        items,
+        pagination: apiRes.pagination || {
+          page,
+          limit,
+          total: items.length,
+          totalPages: Math.max(1, Math.ceil(items.length / limit)),
+        },
+      };
     }
   } catch (err) {
-    console.warn('ShiftLK API getProducts failed:', err);
+    console.warn('ShiftLK API getPaginatedProducts failed:', err);
   }
 
-  // When database has no products, strictly return empty array
-  return [];
+  return {
+    items: [],
+    pagination: {
+      page,
+      limit,
+      total: 0,
+      totalPages: 1,
+    },
+  };
+}
+
+export async function getProducts(
+  locale: AppLocale = 'en',
+  filters: ProductFilterOptions = {}
+): Promise<LocalizedProduct[]> {
+  const res = await getPaginatedProducts(locale, filters);
+  return res.items;
 }
 
 export async function getProductBySlug(

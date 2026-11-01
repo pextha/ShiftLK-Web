@@ -4,6 +4,10 @@ import { Link } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
 import { AppLocale, LocalizedProduct } from '@/lib/db/schema.types';
 import { formatLKR } from '@/lib/utils/currency';
+import {
+  resolveProductImageUrl,
+  isLocalOrUnoptimizedImage,
+} from '@/lib/utils/image';
 import { useCart } from '@/lib/cart-context';
 import {
   CheckCircle2,
@@ -55,9 +59,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
     }
   };
 
-  const primaryImage =
-    product.images?.[0] ||
-    'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=800&q=80';
+  const primaryImage = resolveProductImageUrl(product.images?.[0]);
 
   const previewCompatibility = product.compatibility?.slice(0, 2) || [];
 
@@ -72,6 +74,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
           src={primaryImage}
           alt={product.name}
           fill
+          unoptimized={isLocalOrUnoptimizedImage(primaryImage)}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
           loading="lazy"

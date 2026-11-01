@@ -15,7 +15,7 @@ This document defines the actionable development tasks, architectural requiremen
 | **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ✅ Completed |
 | **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ✅ Completed |
 | **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ✅ Completed |
-| **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ⏳ Pending |
+| **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ✅ Completed |
 | **9** | **Admin Audit Logs Viewer & Password Reset** | UI for `/api/v1/admin/audit-logs` + Admin/Staff password reset in Settings | Low | ⏳ Pending |
 
 ---
@@ -298,9 +298,9 @@ Resolve remaining hardcoded values, seed-data fallbacks, and staff permission ga
 Allow storefront visitors to browse across multiple pages of spare parts on `/[locale]/products` and ensure product images served from either Cloudflare R2 or the local backend media proxy render without Next.js private-IP errors.
 
 ### 8.2 Technical Implementation Plan for Task 8
-- [ ] **Catalog Pagination (`frontend/src/app/[locale]/products/page.tsx` & `productService.ts`):**
+- [x] **Catalog Pagination (`frontend/src/app/[locale]/products/page.tsx` & `productService.ts`):**
   - Return `{ items, pagination }` from `getProducts()` and render Previous / Page Numbers / Next pagination controls at the bottom of `/[locale]/products` preserving active search/filter query params.
-- [ ] **Image Rendering Resilience (`ProductCard.tsx` & `ProductGallery.tsx`):**
+- [x] **Image Rendering Resilience (`ProductCard.tsx` & `ProductGallery.tsx`):**
   - Normalize relative media paths (`/api/v1/media/...`) and set `unoptimized` on `<Image />` when the URL points to `localhost` / `127.0.0.1` in development, while keeping full Next.js optimization for Cloudflare R2 CDN URLs.
 
 ---
@@ -349,5 +349,5 @@ Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in t
 ### Data Sync, Pagination & Security (Tasks 7, 8 & 9):
 - [x] Dashboard Low Stock KPI count accurately matches per-product `lowStockThreshold`.
 - [x] Enabling `hideProfitFromStaff` hides cost and profit metrics from `STAFF` users.
-- [ ] Storefront `/products` supports multi-page pagination.
+- [x] Storefront `/products` supports multi-page pagination.
 - [ ] Admin can view system audit logs and reset staff passwords in `/admin/settings`.

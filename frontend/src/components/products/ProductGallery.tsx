@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import {
+  resolveProductImageUrl,
+  isLocalOrUnoptimizedImage,
+} from '@/lib/utils/image';
 
 interface ProductGalleryProps {
   images: string[];
@@ -9,21 +13,23 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images, productName }: ProductGalleryProps) {
-  const displayImages = images && images.length > 0
-    ? images
-    : ['https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=800&q=80'];
+  const displayImages = (images && images.length > 0 ? images : [undefined]).map((url) =>
+    resolveProductImageUrl(url)
+  );
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeUrl = displayImages[activeIndex] || displayImages[0];
 
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Main Large Image */}
       <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
         <Image
-          src={displayImages[activeIndex]}
+          src={activeUrl}
           alt={`${productName} image ${activeIndex + 1}`}
           fill
           priority
+          unoptimized={isLocalOrUnoptimizedImage(activeUrl)}
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover object-center transition-all duration-300"
         />
@@ -47,6 +53,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                 src={img}
                 alt={`${productName} thumbnail ${idx + 1}`}
                 fill
+                unoptimized={isLocalOrUnoptimizedImage(img)}
                 sizes="80px"
                 className="object-cover"
               />
