@@ -16,7 +16,7 @@ This document defines the actionable development tasks, architectural requiremen
 | **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ✅ Completed |
 | **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ✅ Completed |
 | **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ✅ Completed |
-| **9** | **Admin Audit Logs Viewer & Password Reset** | UI for `/api/v1/admin/audit-logs` + Admin/Staff password reset in Settings | Low | ⏳ Pending |
+| **9** | **Admin Audit Logs Viewer & Password Reset** | UI for `/api/v1/admin/audit-logs` + Admin/Staff password reset in Settings | Low | ✅ Completed |
 
 ---
 
@@ -311,9 +311,9 @@ Allow storefront visitors to browse across multiple pages of spare parts on `/[l
 Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in the Admin Portal and allow admins to change passwords or reset staff member passwords.
 
 ### 9.2 Technical Implementation Plan for Task 9
-- [ ] **Audit Logs Tab in `/admin/settings` (`frontend/src/app/admin/settings/page.tsx`):**
+- [x] **Audit Logs Tab in `/admin/settings` (`frontend/src/app/admin/settings/page.tsx`):**
   - Add an **Audit Trail** tab (Admin-only) displaying timestamp, staff member, action badge (`CREATE_PRODUCT`, `RESTOCK_PRODUCT`, `UPDATE_ORDER_STATUS`, etc.), entity ID, IP address, and change details with pagination.
-- [ ] **Password Reset / Update (`backend/src/modules/users/` & `/admin/settings`):**
+- [x] **Password Reset / Update (`backend/src/modules/users/` & `/admin/settings`):**
   - Add `PATCH /api/v1/admin/users/:id/password` endpoint allowing admins to reset a staff user's password (or change their own password) with bcrypt hashing and audit logging.
   - Add a "Reset Password" modal button in the Staff & Personnel table in `/admin/settings`.
 
@@ -350,4 +350,4 @@ Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in t
 - [x] Dashboard Low Stock KPI count accurately matches per-product `lowStockThreshold`.
 - [x] Enabling `hideProfitFromStaff` hides cost and profit metrics from `STAFF` users.
 - [x] Storefront `/products` supports multi-page pagination.
-- [ ] Admin can view system audit logs and reset staff passwords in `/admin/settings`.
+- [x] Admin can view system audit logs and reset staff passwords in `/admin/settings`.

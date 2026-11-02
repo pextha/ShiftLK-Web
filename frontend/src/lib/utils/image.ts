@@ -40,3 +40,4 @@ export function isLocalOrUnoptimizedImage(url?: string | null): boolean {
     url.includes('/api/v1/media/')
   );
 }
+
