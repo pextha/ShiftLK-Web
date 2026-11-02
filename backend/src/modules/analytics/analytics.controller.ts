@@ -3,7 +3,7 @@ import { analyticsService } from './analytics.service';
 
 export async function getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await analyticsService.getOverview();
+    const result = await analyticsService.getOverview(req.user?.role);
     res.json({ data: result });
   } catch (error) {
     next(error);
@@ -33,7 +33,7 @@ export async function getTopProducts(req: Request, res: Response, next: NextFunc
 export async function getLowStock(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const threshold = req.query.threshold ? Number(req.query.threshold) : undefined;
-    const result = await analyticsService.getLowStock(threshold);
+    const result = await analyticsService.getLowStock(threshold, req.user?.role);
     res.json({ data: result });
   } catch (error) {
     next(error);
@@ -43,11 +43,14 @@ export async function getLowStock(req: Request, res: Response, next: NextFunctio
 export async function getReports(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { period, startDate, endDate } = req.query;
-    const result = await analyticsService.getReports({
-      period: period as any,
-      startDate: startDate as string,
-      endDate: endDate as string,
-    });
+    const result = await analyticsService.getReports(
+      {
+        period: period as any,
+        startDate: startDate as string,
+        endDate: endDate as string,
+      },
+      req.user?.role
+    );
     res.json({ data: result });
   } catch (error) {
     next(error);

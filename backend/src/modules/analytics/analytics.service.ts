@@ -1,11 +1,19 @@
 import { prisma } from '../../lib/prisma';
 
 export class AnalyticsService {
-  async getOverview() {
+  private async shouldHideProfitForUser(userRole?: string): Promise<boolean> {
+    if (userRole !== 'STAFF') return false;
+    const setting = await prisma.systemSetting.findUnique({
+      where: { id: 'default' },
+    });
+    return Boolean(setting?.hideProfitFromStaff);
+  }
+
+  async getOverview(userRole?: string) {
     // 1. Order stats & Revenue
     const completedStatuses = ['CONFIRMED', 'SHIPPED', 'DELIVERED'];
 
-    const [orders, expenses, pendingCount, lowStockCount] = await Promise.all([
+    const [orders, expenses, pendingCount, activeProducts, hideProfit] = await Promise.all([
       prisma.order.findMany({
         where: { status: { in: completedStatuses as any } },
         include: { items: true },
@@ -14,8 +22,16 @@ export class AnalyticsService {
         _sum: { amount: true },
       }),
       prisma.order.count({ where: { status: 'PENDING' } }),
-      prisma.product.count({ where: { isActive: true, stockQty: { lte: 3 } } }),
+      prisma.product.findMany({
+        where: { isActive: true },
+        select: { stockQty: true, lowStockThreshold: true },
+      }),
+      this.shouldHideProfitForUser(userRole),
     ]);
+
+    const lowStockCount = activeProducts.filter(
+      (p) => p.stockQty <= (p.lowStockThreshold ?? 5)
+    ).length;
 
     let totalRevenue = 0;
     let totalCogs = 0; // Cost of Goods Sold
@@ -35,15 +51,16 @@ export class AnalyticsService {
 
     return {
       revenue: Math.round(totalRevenue),
-      cogs: Math.round(totalCogs),
-      grossProfit: Math.round(grossProfit),
-      grossMarginPercent: Math.round(grossMarginPercent * 10) / 10,
-      totalExpenses: Math.round(totalExpenses),
-      netProfit: Math.round(netProfit),
-      netMarginPercent: Math.round(netMarginPercent * 10) / 10,
+      cogs: hideProfit ? 0 : Math.round(totalCogs),
+      grossProfit: hideProfit ? 0 : Math.round(grossProfit),
+      grossMarginPercent: hideProfit ? 0 : Math.round(grossMarginPercent * 10) / 10,
+      totalExpenses: hideProfit ? 0 : Math.round(totalExpenses),
+      netProfit: hideProfit ? 0 : Math.round(netProfit),
+      netMarginPercent: hideProfit ? 0 : Math.round(netMarginPercent * 10) / 10,
       totalOrders: orders.length,
       pendingOrders: pendingCount,
       lowStockAlerts: lowStockCount,
+      hideProfit,
     };
   }
 
@@ -123,17 +140,20 @@ export class AnalyticsService {
     return results;
   }
 
-  async getLowStock(threshold?: number) {
-    const products = await prisma.product.findMany({
-      where: {
-        isActive: true,
-      },
-      orderBy: { stockQty: 'asc' },
-      include: {
-        translations: { where: { language: 'en' } },
-        brand: true,
-      },
-    });
+  async getLowStock(threshold?: number, userRole?: string) {
+    const [products, hideProfit] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          isActive: true,
+        },
+        orderBy: { stockQty: 'asc' },
+        include: {
+          translations: { where: { language: 'en' } },
+          brand: true,
+        },
+      }),
+      this.shouldHideProfitForUser(userRole),
+    ]);
 
     const lowStockItems = products.filter((p) => {
       const limit = threshold !== undefined ? threshold : p.lowStockThreshold ?? 5;
@@ -149,15 +169,19 @@ export class AnalyticsService {
       stockQty: p.stockQty,
       lowStockThreshold: p.lowStockThreshold ?? 5,
       sellingPrice: Number(p.sellingPrice),
-      costPrice: Number(p.costPrice),
+      costPrice: hideProfit ? 0 : Number(p.costPrice),
     }));
   }
 
-  async getReports(options: {
-    period?: 'daily' | 'weekly' | 'monthly' | 'custom';
-    startDate?: string;
-    endDate?: string;
-  }) {
+  async getReports(
+    options: {
+      period?: 'daily' | 'weekly' | 'monthly' | 'custom';
+      startDate?: string;
+      endDate?: string;
+    },
+    userRole?: string
+  ) {
+    const hideProfit = await this.shouldHideProfitForUser(userRole);
     const period = options.period || 'monthly';
     const now = new Date();
 
@@ -309,8 +333,8 @@ export class AnalyticsService {
         }
         productSalesMap[pId].unitsSold += item.qty;
         productSalesMap[pId].revenue += itemRevenue;
-        productSalesMap[pId].cost += itemCost;
-        productSalesMap[pId].profit += itemProfit;
+        productSalesMap[pId].cost += hideProfit ? 0 : itemCost;
+        productSalesMap[pId].profit += hideProfit ? 0 : itemProfit;
       }
     }
 
@@ -336,10 +360,10 @@ export class AnalyticsService {
     for (const d of Object.values(dailyMap)) {
       d.netProfit = d.grossProfit - d.expenses;
       d.revenue = Math.round(d.revenue);
-      d.cogs = Math.round(d.cogs);
-      d.grossProfit = Math.round(d.grossProfit);
-      d.expenses = Math.round(d.expenses);
-      d.netProfit = Math.round(d.netProfit);
+      d.cogs = hideProfit ? 0 : Math.round(d.cogs);
+      d.grossProfit = hideProfit ? 0 : Math.round(d.grossProfit);
+      d.expenses = hideProfit ? 0 : Math.round(d.expenses);
+      d.netProfit = hideProfit ? 0 : Math.round(d.netProfit);
     }
 
     const grossProfit = totalRevenue - totalCogs;
@@ -350,7 +374,7 @@ export class AnalyticsService {
       .slice(0, 10);
 
     const mostProfitableProducts = Object.values(productSalesMap)
-      .sort((a, b) => b.profit - a.profit)
+      .sort((a, b) => (hideProfit ? b.unitsSold - a.unitsSold : b.profit - a.profit))
       .slice(0, 10);
 
     const ordersByDistrict = Object.values(districtMap).sort((a, b) => b.orderCount - a.orderCount);
@@ -359,18 +383,25 @@ export class AnalyticsService {
       period,
       fromDate: fromDate.toISOString(),
       toDate: toDate.toISOString(),
+      hideProfit,
       summary: {
         totalOrders: validOrders.length,
         statusCounts,
         totalItemsSold,
         revenue: Math.round(totalRevenue),
-        cogs: Math.round(totalCogs),
-        grossProfit: Math.round(grossProfit),
-        grossMarginPercent: totalRevenue > 0 ? Math.round(((grossProfit / totalRevenue) * 100) * 10) / 10 : 0,
+        cogs: hideProfit ? 0 : Math.round(totalCogs),
+        grossProfit: hideProfit ? 0 : Math.round(grossProfit),
+        grossMarginPercent:
+          hideProfit || totalRevenue <= 0
+            ? 0
+            : Math.round(((grossProfit / totalRevenue) * 100) * 10) / 10,
         deliveryFeesCollected: Math.round(totalDeliveryFees),
-        totalExpenses: Math.round(totalExpensesAmount),
-        netProfit: Math.round(netProfit),
-        netMarginPercent: totalRevenue > 0 ? Math.round(((netProfit / totalRevenue) * 100) * 10) / 10 : 0,
+        totalExpenses: hideProfit ? 0 : Math.round(totalExpensesAmount),
+        netProfit: hideProfit ? 0 : Math.round(netProfit),
+        netMarginPercent:
+          hideProfit || totalRevenue <= 0
+            ? 0
+            : Math.round(((netProfit / totalRevenue) * 100) * 10) / 10,
       },
       timeline: Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date)),
       topSellingProducts,

@@ -15,6 +15,7 @@ import categoriesRoutes from './modules/categories/categories.routes';
 import brandsRoutes from './modules/brands/brands.routes';
 import deliveryRoutes from './modules/delivery/delivery.routes';
 import ordersRoutes from './modules/orders/orders.routes';
+import { getPublicSettings } from './modules/settings/settings.controller';
 
 import adminAuthRoutes from './modules/auth/auth.routes';
 import adminCategoriesRoutes from './modules/categories/admin.categories.routes';
@@ -105,6 +106,7 @@ app.use('/api/v1/categories', categoriesRoutes);
 app.use('/api/v1/brands', brandsRoutes);
 app.use('/api/v1/delivery-zones', deliveryRoutes);
 app.use('/api/v1/orders', ordersRoutes);
+app.get('/api/v1/settings/public', getPublicSettings);
 
 // API v1 Admin Routes
 app.use('/api/v1/admin/auth', adminAuthRoutes);

@@ -14,6 +14,8 @@ export interface ProductFilterOptions {
   maxPrice?: number;
   inStockOnly?: boolean;
   sortBy?: 'newest' | 'price_asc' | 'price_desc';
+  page?: number;
+  limit?: number;
 }
 
 function localizeProduct(
@@ -40,6 +42,7 @@ function localizeProduct(
     condition: raw.condition,
     selling_price: raw.selling_price,
     stock_qty: raw.stock_qty,
+    low_stock_threshold: 5,
     weight_kg: raw.weight_kg,
     is_active: raw.is_active,
     images: raw.images,
@@ -71,6 +74,8 @@ export async function getProducts(
       maxPrice: filters.maxPrice,
       inStockOnly: filters.inStockOnly,
       sortBy: filters.sortBy,
+      page: filters.page,
+      limit: filters.limit,
       locale,
     });
 
@@ -80,12 +85,13 @@ export async function getProducts(
         slug: item.slug,
         part_number: item.part_number,
         brand: item.brand,
-        category_id: item.category?.id || '',
-        category_slug: item.category?.slug,
-        category_name: item.category?.name || 'Spare Parts',
+        category_id: item.category?.id || item.category_id || '',
+        category_slug: item.category?.slug || item.category_slug,
+        category_name: item.category?.name || item.category_name || 'Spare Parts',
         condition: item.condition,
         selling_price: item.selling_price,
         stock_qty: item.stock_qty,
+        low_stock_threshold: item.low_stock_threshold ?? 5,
         weight_kg: item.weight_kg,
         is_active: item.is_active,
         images: item.images,
@@ -127,12 +133,13 @@ export async function getProductBySlug(
         slug: item.slug,
         part_number: item.part_number,
         brand: item.brand,
-        category_id: item.category?.id || '',
-        category_slug: item.category?.slug,
-        category_name: item.category?.name || 'Spare Parts',
+        category_id: item.category?.id || item.category_id || '',
+        category_slug: item.category?.slug || item.category_slug,
+        category_name: item.category?.name || item.category_name || 'Spare Parts',
         condition: item.condition,
         selling_price: item.selling_price,
         stock_qty: item.stock_qty,
+        low_stock_threshold: item.low_stock_threshold ?? 5,
         weight_kg: item.weight_kg,
         is_active: item.is_active,
         images: item.images,
@@ -253,7 +260,9 @@ export const SHIFTLK_SUPPORTED_BIKES: SupportedBikeBrand[] = [
   },
 ];
 
-export function getAllMakesAndModels(): { make: string; models: string[] }[] {
+export function getAllMakesAndModels(
+  liveProducts: LocalizedProduct[] = []
+): { make: string; models: string[] }[] {
   const makeMap = new Map<string, Set<string>>();
 
   SHIFTLK_SUPPORTED_BIKES.forEach((b) => {
@@ -269,7 +278,17 @@ export function getAllMakesAndModels(): { make: string; models: string[] }[] {
     });
   });
 
-  const priorityOrder = ['Bajaj', 'Honda', 'Yamaha'];
+  liveProducts.forEach((p) => {
+    (p.compatibility || []).forEach((c) => {
+      if (!c.make || !c.model) return;
+      if (!makeMap.has(c.make)) {
+        makeMap.set(c.make, new Set());
+      }
+      makeMap.get(c.make)!.add(c.model);
+    });
+  });
+
+  const priorityOrder = ['Bajaj', 'Honda', 'Yamaha', 'TVS', 'Suzuki', 'Hero'];
   const makes: { make: string; models: string[] }[] = [];
 
   priorityOrder.forEach((makeName) => {

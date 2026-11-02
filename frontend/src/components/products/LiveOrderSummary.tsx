@@ -87,7 +87,7 @@ export default function LiveOrderSummary({
               <XCircle className="w-3.5 h-3.5" />
               <span>{t('outOfStock')}</span>
             </div>
-          ) : product.stock_qty <= 5 ? (
+          ) : product.stock_qty <= (product.low_stock_threshold ?? 5) ? (
             <div className="inline-flex items-center gap-1.5 bg-amber-950/80 text-amber-300 border border-amber-700/60 px-3 py-1 rounded-full text-xs font-bold">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>{t('lowStock', { qty: product.stock_qty })}</span>

@@ -2,6 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { settingsService } from './settings.service';
 import { auditService } from '../audit/audit.service';
 
+export async function getPublicSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await settingsService.getPublicSettings();
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const data = await settingsService.getSettings();

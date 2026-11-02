@@ -29,7 +29,8 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
   const { addItem } = useCart();
 
   const isOutOfStock = product.stock_qty <= 0;
-  const isLowStock = product.stock_qty > 0 && product.stock_qty <= 5;
+  const isLowStock =
+    product.stock_qty > 0 && product.stock_qty <= (product.low_stock_threshold ?? 5);
 
   const getConditionBadge = () => {
     switch (product.condition) {

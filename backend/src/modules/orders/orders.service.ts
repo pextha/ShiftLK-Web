@@ -139,7 +139,11 @@ export class OrdersService {
       return order;
     });
 
-    // 7. Generate localized WhatsApp message
+    // 7. Generate localized WhatsApp message using dynamic SystemSetting WhatsApp number if configured
+    const sysSetting = await prisma.systemSetting.findUnique({
+      where: { id: 'default' },
+    });
+
     const firstItem = validatedItems[0];
     const itemsSummary =
       validatedItems.length > 1
@@ -177,7 +181,7 @@ export class OrdersService {
       locale: input.locale,
     });
 
-    const whatsAppUrl = getWhatsAppUrl(whatsAppMessage);
+    const whatsAppUrl = getWhatsAppUrl(whatsAppMessage, sysSetting?.whatsappNumber || undefined);
 
     return {
       orderCode: createdOrder.orderCode,
