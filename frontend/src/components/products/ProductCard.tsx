@@ -4,13 +4,14 @@ import { Link } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
 import { AppLocale, LocalizedProduct } from '@/lib/db/schema.types';
 import { formatLKR } from '@/lib/utils/currency';
+import { useCart } from '@/lib/cart-context';
 import {
-  ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   XCircle,
   Car,
   ChevronRight,
+  ShoppingCart,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import Image from 'next/image';
@@ -25,6 +26,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
   const t = useTranslations('product');
   const tFilters = useTranslations('filters');
   const tCommon = useTranslations('common');
+  const { addItem } = useCart();
 
   const isOutOfStock = product.stock_qty <= 0;
   const isLowStock = product.stock_qty > 0 && product.stock_qty <= 5;
@@ -146,7 +148,19 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {!isOutOfStock && (
+              <button
+                type="button"
+                onClick={() => addItem(product, 1, true)}
+                className="inline-flex items-center justify-center p-2.5 rounded-xl bg-[#141b2b] hover:bg-[#ccff00] hover:text-black border border-[#212c42] text-[#ccff00] transition-all cursor-pointer"
+                title="Add to Cart"
+                aria-label="Add to Cart"
+              >
+                <ShoppingCart className="w-4 h-4" />
+              </button>
+            )}
+
             <Link
               href={`/products/${product.slug}`}
               className="inline-flex items-center justify-center p-2.5 sm:px-3 sm:py-2 rounded-xl bg-[#141b2b] hover:bg-[#ccff00] hover:text-black border border-[#212c42] text-slate-200 text-xs font-bold transition-all"
@@ -161,7 +175,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
                 type="button"
                 onClick={() => onQuickOrder(product)}
                 disabled={isOutOfStock}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all ${
                   isOutOfStock
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     : 'bg-[#25D366] hover:bg-[#20ba59] text-black shadow-md shadow-emerald-950/40 cursor-pointer active:scale-95'
@@ -174,7 +188,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
             ) : (
               <Link
                 href={`/products/${product.slug}`}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all ${
                   isOutOfStock
                     ? 'bg-slate-800 text-slate-500'
                     : 'bg-[#25D366] hover:bg-[#20ba59] text-black shadow-md shadow-emerald-950/40'

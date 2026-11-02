@@ -14,6 +14,8 @@ import { routing } from '@/i18n/routing';
 import Header from '@/components/header/Header';
 import Footer from '@/components/footer/Footer';
 import FloatingWhatsApp from '@/components/common/FloatingWhatsApp';
+import { CartProvider } from '@/lib/cart-context';
+import CartDrawer from '@/components/cart/CartDrawer';
 import '../globals.css';
 
 const inter = Inter({
@@ -162,10 +164,13 @@ export default async function LocaleLayout({
     >
       <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-brand-neon selection:text-black">
         <NextIntlClientProvider messages={messages}>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <FloatingWhatsApp />
+          <CartProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <CartDrawer />
+            <FloatingWhatsApp />
+          </CartProvider>
         </NextIntlClientProvider>
       </body>
     </html>

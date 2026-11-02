@@ -9,8 +9,12 @@ import { calculateDeliveryFee, getDeliveryZoneByDistrict } from './deliveryServi
 import { apiClient, ApiClientError } from '@/lib/api/client';
 
 export interface CreateOrderInput {
-  productId: string;
-  quantity: number;
+  productId?: string;
+  quantity?: number;
+  items?: Array<{
+    productId: string;
+    qty: number;
+  }>;
   customerName: string;
   phone: string;
   address: string;
@@ -37,6 +41,7 @@ export async function createPendingOrder(
   const {
     productId,
     quantity,
+    items,
     customerName,
     phone,
     address,
@@ -45,6 +50,14 @@ export async function createPendingOrder(
     locale,
     originUrl,
   } = input;
+
+  // Normalize items array from either `items` or single `productId` + `quantity`
+  const normalizedItems: Array<{ productId: string; qty: number }> =
+    Array.isArray(items) && items.length > 0
+      ? items.filter((i) => i.productId && i.qty > 0)
+      : productId && quantity && quantity > 0
+      ? [{ productId, qty: quantity }]
+      : [];
 
   // 1. Validate inputs locally before network request
   if (!customerName || !customerName.trim()) {
@@ -59,8 +72,8 @@ export async function createPendingOrder(
     return { success: false, error: 'Delivery district is required' };
   }
 
-  if (!quantity || quantity <= 0) {
-    return { success: false, error: 'Valid quantity is required' };
+  if (normalizedItems.length === 0) {
+    return { success: false, error: 'At least one valid item is required' };
   }
 
   const phoneValidation = validateSriLankanPhone(phone);
@@ -80,12 +93,7 @@ export async function createPendingOrder(
       district: district.trim(),
       notes: notes?.trim(),
       locale,
-      items: [
-        {
-          productId,
-          qty: quantity,
-        },
-      ],
+      items: normalizedItems,
     });
 
     return {
@@ -117,26 +125,35 @@ export async function createPendingOrder(
   }
 
   // 3. Fallback: local in-memory order processor if backend API is offline
-  const rawProduct = SEED_RAW_PRODUCTS.find((p) => p.id === productId);
-  if (!rawProduct) {
-    return { success: false, error: 'Product not found' };
+  let itemTotal = 0;
+  let totalWeightKg = 0;
+  let allStickers = true;
+  const matchedProducts: Array<{ raw: (typeof SEED_RAW_PRODUCTS)[0]; qty: number }> = [];
+
+  for (const reqItem of normalizedItems) {
+    const rawProduct = SEED_RAW_PRODUCTS.find((p) => p.id === reqItem.productId);
+    if (!rawProduct) {
+      return { success: false, error: `Product ${reqItem.productId} not found` };
+    }
+    if (rawProduct.stock_qty < reqItem.qty) {
+      return {
+        success: false,
+        error: `Only ${rawProduct.stock_qty} units available in stock`,
+      };
+    }
+    const cat = SEED_CATEGORIES.find((c) => c.id === rawProduct.category_id);
+    if (cat?.slug !== 'body-stickers') {
+      allStickers = false;
+    }
+    itemTotal += rawProduct.selling_price * reqItem.qty;
+    totalWeightKg += (rawProduct.weight_kg || 1) * reqItem.qty;
+    matchedProducts.push({ raw: rawProduct, qty: reqItem.qty });
   }
 
-  if (rawProduct.stock_qty < quantity) {
-    return {
-      success: false,
-      error: `Only ${rawProduct.stock_qty} units available in stock`,
-    };
-  }
-
-  const cat = SEED_CATEGORIES.find((c) => c.id === rawProduct.category_id);
   const zone = await getDeliveryZoneByDistrict(district);
-  const deliveryCost = calculateDeliveryFee(
-    zone,
-    (rawProduct.weight_kg || 1) * quantity,
-    { categorySlug: cat?.slug }
-  );
-  const itemTotal = rawProduct.selling_price * quantity;
+  const deliveryCost = calculateDeliveryFee(zone, totalWeightKg, {
+    categorySlug: allStickers ? 'body-stickers' : undefined,
+  });
   const grandTotal = itemTotal + deliveryCost;
 
   const orderCode = `SLK-${String(localOrderSequence++).padStart(6, '0')}`;
@@ -157,20 +174,26 @@ export async function createPendingOrder(
     created_at: new Date().toISOString(),
   };
 
+  const firstProduct = matchedProducts[0].raw;
   const localizedTitle =
-    rawProduct.translations[locale]?.name || rawProduct.translations.en.name;
+    firstProduct.translations[locale]?.name || firstProduct.translations.en.name;
+  const displayProductName =
+    matchedProducts.length === 1
+      ? localizedTitle
+      : `${localizedTitle} + ${matchedProducts.length - 1} more items`;
+
   const productUrl = originUrl
-    ? `${originUrl}/${locale}/products/${rawProduct.slug}`
-    : `https://shiftlk.lk/${locale}/products/${rawProduct.slug}`;
+    ? `${originUrl}/${locale}/products/${firstProduct.slug}`
+    : `https://shiftlk.lk/${locale}/products/${firstProduct.slug}`;
 
   const whatsAppMessage = buildWhatsAppOrderMessage({
     orderCode,
-    productName: localizedTitle,
-    partNumber: rawProduct.part_number,
-    brand: rawProduct.brand,
-    condition: rawProduct.condition,
-    quantity,
-    unitPrice: rawProduct.selling_price,
+    productName: displayProductName,
+    partNumber: firstProduct.part_number,
+    brand: firstProduct.brand,
+    condition: firstProduct.condition,
+    quantity: matchedProducts[0].qty,
+    unitPrice: matchedProducts.length === 1 ? firstProduct.selling_price : itemTotal,
     district,
     deliveryCost,
     total: grandTotal,

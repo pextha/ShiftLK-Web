@@ -14,9 +14,11 @@ import {
   Flame,
   Shield,
   PackageSearch,
+  ShoppingCart,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import AdminLoginModal from './AdminLoginModal';
+import { useCart } from '@/lib/cart-context';
 
 export default function Header() {
   const locale = useLocale();
@@ -25,6 +27,7 @@ export default function Header() {
   const tCommon = useTranslations('common');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const { totalItemsCount, setIsCartOpen } = useCart();
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#06080d]/95 backdrop-blur-md border-b border-[#1c2436]">
@@ -149,11 +152,27 @@ export default function Header() {
             {/* Always-visible Language Switcher */}
             <LanguageSwitcher />
 
+            {/* Shopping Cart Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-slate-300 hover:text-[#ccff00] hover:bg-[#0e1422] rounded-xl border border-[#212c42]/80 hover:border-[#ccff00]/40 transition-colors cursor-pointer"
+              title="Shopping Cart"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {totalItemsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ccff00] text-black text-[10px] font-black flex items-center justify-center shadow-md">
+                  {totalItemsCount}
+                </span>
+              )}
+            </button>
+
             {/* Subtle Staff / Admin Portal Entry Icon */}
             <button
               type="button"
               onClick={() => setAdminModalOpen(true)}
-              className="p-2 text-slate-400 hover:text-[#ccff00] hover:bg-[#0e1422] rounded-xl border border-[#212c42]/60 hover:border-[#ccff00]/40 transition-colors"
+              className="p-2 text-slate-400 hover:text-[#ccff00] hover:bg-[#0e1422] rounded-xl border border-[#212c42]/60 hover:border-[#ccff00]/40 transition-colors cursor-pointer"
               title="Staff & Admin Portal"
               aria-label="Staff & Admin Portal"
             >

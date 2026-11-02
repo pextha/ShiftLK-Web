@@ -13,7 +13,7 @@ This document defines the actionable development tasks, architectural requiremen
 | **3** | **Admin Category Management & Selection** | Full CRUD for categories + in-form quick category creation | High | ✅ Completed |
 | **4** | **Admin Brand Management & Quick Creation** | Full CRUD for brands + in-form `+ New Brand` modal in product forms | High | ✅ Completed |
 | **5** | **Customer Order Tracking Portal** | Trilingual `/[locale]/track-order` page using Order Code + Phone | High | ✅ Completed |
-| **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ⏳ Pending |
+| **6** | **Multi-Item Shopping Cart & Checkout** | Persistent cart drawer + combined weight calculation + multi-item order | Medium | ✅ Completed |
 | **7** | **Dynamic Settings, Staff Privacy & Data Sync** | Fix low-stock KPI bug, enforce `hideProfitFromStaff`, dynamic WhatsApp & Sitemap | High | ⏳ Pending |
 | **8** | **Storefront Catalog Pagination & Image Polish** | Server-side pagination UI on `/products` + R2/local image rendering | Medium | ⏳ Pending |
 | **9** | **Admin Audit Logs Viewer & Password Reset** | UI for `/api/v1/admin/audit-logs` + Admin/Staff password reset in Settings | Low | ⏳ Pending |
@@ -260,13 +260,13 @@ The backend already provides `GET /api/v1/orders/:code?phone=...` (`ordersServic
 Currently, customers can only order a single product at a time from the product detail page, even though `POST /api/v1/orders` in the backend already supports multi-item arrays (`items: Array<{ productId, qty }>`) and combined weight shipping calculations. Enable customers to add multiple parts into a shopping cart and place a single consolidated order.
 
 ### 6.2 Technical Implementation Plan for Task 6
-- [ ] **Cart State (`frontend/src/lib/cart-context.tsx`):**
+- [x] **Cart State (`frontend/src/lib/cart-context.tsx`):**
   - Persistent `localStorage` cart storing `{ product, qty }` with `addItem`, `updateQty`, `removeItem`, `clearCart`, total items count, and combined weight calculation.
-- [ ] **Cart UI (`frontend/src/components/cart/CartDrawer.tsx`):**
+- [x] **Cart UI (`frontend/src/components/cart/CartDrawer.tsx`):**
   - Add Cart button with live item count badge in `Header.tsx`.
   - Add "Add to Cart" button alongside "Order via WhatsApp" in `ProductCard.tsx` and `LiveOrderSummary.tsx`.
   - Slide-over `CartDrawer` with district selector, live combined weight courier fee calculation (`Rs. 425` first kg + `Rs. 100/kg` extra, or `Rs. 220` Speed Post if all items are stickers `< 250g`), and multi-item WhatsApp checkout submission via `/api/orders`.
-- [ ] **Update `/api/orders` & `orderService.ts`:**
+- [x] **Update `/api/orders` & `orderService.ts`:**
   - Support both single-item (`productId`, `quantity`) and multi-item (`items: [{ productId, qty }]`) payloads seamlessly.
 
 ---
@@ -344,7 +344,7 @@ Expose the existing backend Audit Logs API (`GET /api/v1/admin/audit-logs`) in t
 
 ### Customer Order Tracking & Cart (Tasks 5 & 6):
 - [x] Customers can look up live order status on `/[locale]/track-order` using their Order Code and Sri Lankan phone number.
-- [ ] Customers can add multiple spare parts to the cart drawer and submit a combined WhatsApp order with accurate weight-based delivery fees.
+- [x] Customers can add multiple spare parts to the cart drawer and submit a combined WhatsApp order with accurate weight-based delivery fees.
 
 ### Data Sync, Pagination & Security (Tasks 7, 8 & 9):
 - [ ] Dashboard Low Stock KPI count accurately matches per-product `lowStockThreshold`.

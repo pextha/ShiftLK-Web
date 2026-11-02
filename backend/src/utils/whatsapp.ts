@@ -10,6 +10,8 @@ export interface WhatsAppOrderMessageParams {
   condition: string;
   quantity: number;
   unitPrice: number;
+  subtotalOverride?: number;
+  itemsSummary?: string;
   district: string;
   deliveryCost: number;
   total: number;
@@ -38,6 +40,8 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
     condition,
     quantity,
     unitPrice,
+    subtotalOverride,
+    itemsSummary,
     district,
     deliveryCost,
     total,
@@ -49,7 +53,7 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
     frontendUrl,
   } = params;
 
-  const itemTotal = unitPrice * quantity;
+  const itemTotal = subtotalOverride !== undefined ? subtotalOverride : unitPrice * quantity;
   const safeCustomerName = sanitizeText(customerName);
   const safeAddress = sanitizeText(address);
   const safeNotes = notes ? sanitizeText(notes) : '';
@@ -72,11 +76,15 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
       `*🏍️ ShiftLK Spares - නව ඇණවුම*`,
       `━━━━━━━━━━━━━━━━━━━`,
       `📦 *ඇණවුම් අංකය:* #${orderCode}`,
-      `🔧 *අමතර කොටස:* ${productName}`,
-      `🔢 *OEM කොටස් අංකය:* ${partNumber}`,
-      `🏷️ *සන්නාමය:* ${brand} (${condition.toUpperCase()})`,
-      `🔢 *ප්‍රමාණය:* ${quantity}`,
-      `💵 *ඒකකයක මිල:* ${formatLKR(unitPrice, 'si')}`,
+      itemsSummary
+        ? `🛒 *අයිතම ලැයිස්තුව:*\n${itemsSummary}`
+        : [
+            `🔧 *අමතර කොටස:* ${productName}`,
+            `🔢 *OEM කොටස් අංකය:* ${partNumber}`,
+            `🏷️ *සන්නාමය:* ${brand} (${condition.toUpperCase()})`,
+            `🔢 *ප්‍රමාණය:* ${quantity}`,
+            `💵 *ඒකකයක මිල:* ${formatLKR(unitPrice, 'si')}`,
+          ].join('\n'),
       `💰 *අයිතම වටිනාකම:* ${formatLKR(itemTotal, 'si')}`,
       `━━━━━━━━━━━━━━━━━━━`,
       `📍 *බෙදාහරින දිස්ත්‍රික්කය:* ${district}`,
@@ -100,11 +108,15 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
       `*🏍️ ShiftLK Spares - புதிய ஓடர்*`,
       `━━━━━━━━━━━━━━━━━━━`,
       `📦 *ஓடர் இலக்கம்:* #${orderCode}`,
-      `🔧 *உதிரிப்பாகம்:* ${productName}`,
-      `🔢 *OEM பாக இலக்கம்:* ${partNumber}`,
-      `🏷️ *பிராண்ட்:* ${brand} (${condition.toUpperCase()})`,
-      `🔢 *அளவு:* ${quantity}`,
-      `💵 *அலகு விலை:* ${formatLKR(unitPrice, 'ta')}`,
+      itemsSummary
+        ? `🛒 *பொருட்கள் பட்டியல்:*\n${itemsSummary}`
+        : [
+            `🔧 *உதிரிப்பாகம்:* ${productName}`,
+            `🔢 *OEM பாக இலக்கம்:* ${partNumber}`,
+            `🏷️ *பிராண்ட்:* ${brand} (${condition.toUpperCase()})`,
+            `🔢 *அளவு:* ${quantity}`,
+            `💵 *அலகு விலை:* ${formatLKR(unitPrice, 'ta')}`,
+          ].join('\n'),
       `💰 *பொருட்கள் மொத்தம்:* ${formatLKR(itemTotal, 'ta')}`,
       `━━━━━━━━━━━━━━━━━━━`,
       `📍 *விநியோக மாவட்டம்:* ${district}`,
@@ -128,11 +140,15 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
     `*🏍️ ShiftLK Spares - New Website Order*`,
     `━━━━━━━━━━━━━━━━━━━`,
     `📦 *Order Ref:* #${orderCode}`,
-    `🔧 *Item:* ${productName}`,
-    `🔢 *OEM / Part No:* ${partNumber}`,
-    `🏷️ *Brand:* ${brand} (${condition.toUpperCase()})`,
-    `🔢 *Quantity:* ${quantity}`,
-    `💵 *Unit Price:* ${formatLKR(unitPrice, 'en')}`,
+    itemsSummary
+      ? `🛒 *Ordered Items:*\n${itemsSummary}`
+      : [
+          `🔧 *Item:* ${productName}`,
+          `🔢 *OEM / Part No:* ${partNumber}`,
+          `🏷️ *Brand:* ${brand} (${condition.toUpperCase()})`,
+          `🔢 *Quantity:* ${quantity}`,
+          `💵 *Unit Price:* ${formatLKR(unitPrice, 'en')}`,
+        ].join('\n'),
     `💰 *Subtotal:* ${formatLKR(itemTotal, 'en')}`,
     `━━━━━━━━━━━━━━━━━━━`,
     `📍 *Delivery District:* ${district}`,

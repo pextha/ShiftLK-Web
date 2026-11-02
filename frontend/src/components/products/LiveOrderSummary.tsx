@@ -5,16 +5,17 @@ import { useLocale, useTranslations } from 'next-intl';
 import { AppLocale, DeliveryZone, LocalizedProduct } from '@/lib/db/schema.types';
 import { formatLKR } from '@/lib/utils/currency';
 import { getDeliveryFeeDetails } from '@/services/deliveryService';
+import { useCart } from '@/lib/cart-context';
 import {
   Truck,
   Plus,
   Minus,
-  MapPin,
   Clock,
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  ShoppingCart,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import WhatsAppOrderModal from './WhatsAppOrderModal';
@@ -30,7 +31,7 @@ export default function LiveOrderSummary({
 }: LiveOrderSummaryProps) {
   const locale = useLocale() as AppLocale;
   const t = useTranslations('product');
-  const tFilters = useTranslations('filters');
+  const { addItem } = useCart();
 
   const [quantity, setQuantity] = useState(1);
   const [selectedDistrict, setSelectedDistrict] = useState(
@@ -39,7 +40,6 @@ export default function LiveOrderSummary({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isOutOfStock = product.stock_qty <= 0;
-  const maxAvailable = Math.max(1, product.stock_qty);
 
   // Selected Zone
   const currentZone =
@@ -214,8 +214,8 @@ export default function LiveOrderSummary({
         </div>
       </div>
 
-      {/* Big Action Button: Order via WhatsApp */}
-      <div className="pt-1">
+      {/* Action Buttons: Add to Cart & Order via WhatsApp */}
+      <div className="pt-1 space-y-2.5">
         {isOutOfStock ? (
           <a
             href={`https://wa.me/94770871018?text=${encodeURIComponent(
@@ -229,14 +229,25 @@ export default function LiveOrderSummary({
             <span>{t('chatForAvailability')}</span>
           </a>
         ) : (
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black py-4 px-6 rounded-2xl text-base shadow-xl shadow-emerald-950/60 hover:shadow-emerald-900/40 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
-          >
-            <WhatsAppIcon className="w-6 h-6 text-white" />
-            <span>{t('orderViaWhatsApp')}</span>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => addItem(product, quantity, true)}
+              className="w-full flex items-center justify-center gap-2 bg-[#070a12] hover:bg-[#101726] border border-[#ccff00]/50 text-[#ccff00] font-black py-3.5 px-6 rounded-2xl text-sm transition-all cursor-pointer"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>Add to Cart ({quantity})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black py-4 px-6 rounded-2xl text-base shadow-xl shadow-emerald-950/60 hover:shadow-emerald-900/40 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
+            >
+              <WhatsAppIcon className="w-6 h-6 text-white" />
+              <span>{t('orderViaWhatsApp')}</span>
+            </button>
+          </>
         )}
       </div>
 
