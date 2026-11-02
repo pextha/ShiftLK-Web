@@ -63,13 +63,13 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
       ? locale === 'si'
         ? '(SL Speed Post - ස්ටිකර්)'
         : locale === 'ta'
-        ? '(SL Speed Post - ஸ்டிக்கர்கள்)'
-        : '(SL Speed Post - Stickers)'
+          ? '(SL Speed Post - ஸ்டிக்கர்கள்)'
+          : '(SL Speed Post - Stickers)'
       : locale === 'si'
-      ? '(දිවයින පුරා කුරියර්)'
-      : locale === 'ta'
-      ? '(நாடு தழுவிய கூரியர்)'
-      : '(Islandwide Courier)';
+        ? '(දිවයින පුරා කුරියර්)'
+        : locale === 'ta'
+          ? '(நாடு தழுவிய கூரியர்)'
+          : '(Islandwide Courier)';
 
   if (locale === 'si') {
     return [
@@ -79,12 +79,12 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
       itemsSummary
         ? `🛒 *අයිතම ලැයිස්තුව:*\n${itemsSummary}`
         : [
-            `🔧 *අමතර කොටස:* ${productName}`,
-            `🔢 *OEM කොටස් අංකය:* ${partNumber}`,
-            `🏷️ *සන්නාමය:* ${brand} (${condition.toUpperCase()})`,
-            `🔢 *ප්‍රමාණය:* ${quantity}`,
-            `💵 *ඒකකයක මිල:* ${formatLKR(unitPrice, 'si')}`,
-          ].join('\n'),
+          `🔧 *අමතර කොටස:* ${productName}`,
+          `🔢 *OEM කොටස් අංකය:* ${partNumber}`,
+          `🏷️ *සන්නාමය:* ${brand} (${condition.toUpperCase()})`,
+          `🔢 *ප්‍රමාණය:* ${quantity}`,
+          `💵 *ඒකකයක මිල:* ${formatLKR(unitPrice, 'si')}`,
+        ].join('\n'),
       `💰 *අයිතම වටිනාකම:* ${formatLKR(itemTotal, 'si')}`,
       `━━━━━━━━━━━━━━━━━━━`,
       `📍 *බෙදාහරින දිස්ත්‍රික්කය:* ${district}`,
@@ -111,12 +111,12 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
       itemsSummary
         ? `🛒 *பொருட்கள் பட்டியல்:*\n${itemsSummary}`
         : [
-            `🔧 *உதிரிப்பாகம்:* ${productName}`,
-            `🔢 *OEM பாக இலக்கம்:* ${partNumber}`,
-            `🏷️ *பிராண்ட்:* ${brand} (${condition.toUpperCase()})`,
-            `🔢 *அளவு:* ${quantity}`,
-            `💵 *அலகு விலை:* ${formatLKR(unitPrice, 'ta')}`,
-          ].join('\n'),
+          `🔧 *உதிரிப்பாகம்:* ${productName}`,
+          `🔢 *OEM பாக இலக்கம்:* ${partNumber}`,
+          `🏷️ *பிராண்ட்:* ${brand} (${condition.toUpperCase()})`,
+          `🔢 *அளவு:* ${quantity}`,
+          `💵 *அலகு விலை:* ${formatLKR(unitPrice, 'ta')}`,
+        ].join('\n'),
       `💰 *பொருட்கள் மொத்தம்:* ${formatLKR(itemTotal, 'ta')}`,
       `━━━━━━━━━━━━━━━━━━━`,
       `📍 *விநியோக மாவட்டம்:* ${district}`,
@@ -143,12 +143,12 @@ export function buildWhatsAppOrderMessage(params: WhatsAppOrderMessageParams): s
     itemsSummary
       ? `🛒 *Ordered Items:*\n${itemsSummary}`
       : [
-          `🔧 *Item:* ${productName}`,
-          `🔢 *OEM / Part No:* ${partNumber}`,
-          `🏷️ *Brand:* ${brand} (${condition.toUpperCase()})`,
-          `🔢 *Quantity:* ${quantity}`,
-          `💵 *Unit Price:* ${formatLKR(unitPrice, 'en')}`,
-        ].join('\n'),
+        `🔧 *Item:* ${productName}`,
+        `🔢 *OEM / Part No:* ${partNumber}`,
+        `🏷️ *Brand:* ${brand} (${condition.toUpperCase()})`,
+        `🔢 *Quantity:* ${quantity}`,
+        `💵 *Unit Price:* ${formatLKR(unitPrice, 'en')}`,
+      ].join('\n'),
     `💰 *Subtotal:* ${formatLKR(itemTotal, 'en')}`,
     `━━━━━━━━━━━━━━━━━━━`,
     `📍 *Delivery District:* ${district}`,
