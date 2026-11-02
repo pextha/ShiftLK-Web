@@ -162,14 +162,38 @@ export class ApiClient {
 
     const qs = queryParams.toString();
     const endpoint = `/products${qs ? `?${qs}` : ''}`;
+    const url = `${this.baseUrl}${endpoint}`;
 
-    const res = await this.request<ApiProductItem[] | { items: ApiProductItem[] }>(endpoint, { method: 'GET' });
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
 
-    if (Array.isArray(res)) {
-      return { items: res };
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const errorInfo = json?.error;
+      throw new ApiClientError(
+        errorInfo?.message || `Request failed with status ${res.status}`,
+        res.status,
+        errorInfo?.code || 'HTTP_ERROR',
+        errorInfo?.details
+      );
     }
+
+    const items: ApiProductItem[] = Array.isArray(json)
+      ? json
+      : Array.isArray(json?.data)
+      ? json.data
+      : Array.isArray(json?.items)
+      ? json.items
+      : [];
+
     return {
-      items: (res as { items: ApiProductItem[] }).items || [],
+      items,
+      pagination: json?.pagination,
     };
   }
 
