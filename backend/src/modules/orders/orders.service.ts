@@ -177,8 +177,10 @@ export class OrdersService {
       throw new AppError('INVALID_PHONE', 'Valid Sri Lankan phone number is required to verify order', 400);
     }
 
+    const normalizedCode = orderCode.trim().toUpperCase();
+
     const order = await prisma.order.findUnique({
-      where: { orderCode },
+      where: { orderCode: normalizedCode },
       include: {
         items: {
           include: {
@@ -191,7 +193,7 @@ export class OrdersService {
     });
 
     if (!order) {
-      throw new AppError('ORDER_NOT_FOUND', `Order with code "${orderCode}" was not found`, 404);
+      throw new AppError('ORDER_NOT_FOUND', `Order with code "${normalizedCode}" was not found`, 404);
     }
 
     // Security check: phone number must match

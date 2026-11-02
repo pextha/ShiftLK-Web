@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Flame,
   Shield,
+  PackageSearch,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import AdminLoginModal from './AdminLoginModal';
@@ -42,6 +43,13 @@ export default function Header() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-[11px] font-bold">
+            <Link
+              href="/track-order"
+              className="hidden sm:flex items-center gap-1 text-slate-300 hover:text-[#ccff00] transition-colors"
+            >
+              <PackageSearch className="w-3.5 h-3.5 text-[#ccff00]" />
+              <span>{t('trackOrder')}</span>
+            </Link>
             <a
               href="https://wa.me/94770871018"
               target="_blank"
@@ -100,6 +108,13 @@ export default function Header() {
             >
               <Flame className="w-3.5 h-3.5 text-[#ccff00] shrink-0" />
               <span>{t('products')}</span>
+            </Link>
+            <Link
+              href="/track-order"
+              className="hover:text-[#ccff00] transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+            >
+              <PackageSearch className="w-3.5 h-3.5 text-[#ccff00] shrink-0" />
+              <span>{t('trackOrder')}</span>
             </Link>
             <Link
               href="/delivery"
@@ -197,8 +212,16 @@ export default function Header() {
             >
               <span>{t('products')}</span>
               <span className="text-[10px] font-black bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/30 px-2 py-0.5 rounded-full">
-                12 Parts In Stock
+                In Stock
               </span>
+            </Link>
+            <Link
+              href="/track-order"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] flex items-center gap-2 transition-colors"
+            >
+              <PackageSearch className="w-4 h-4 text-[#ccff00]" />
+              <span>{t('trackOrder')}</span>
             </Link>
             <Link
               href="/delivery"

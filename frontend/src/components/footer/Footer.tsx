@@ -156,6 +156,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/track-order" className="hover:text-[#ccff00] transition-colors text-[#ccff00] font-semibold">
+                  {tNav('trackOrder')}
+                </Link>
+              </li>
+              <li>
                 <Link href="/delivery" className="hover:text-[#ccff00] transition-colors">
                   {tNav('delivery')} (25 Districts)
                 </Link>
@@ -240,6 +245,10 @@ export default function Footer() {
             © {new Date().getFullYear()} ShiftLK Spares. {tCommon('allRightsReserved')}
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/track-order" className="hover:text-white transition-colors">
+              {tNav('trackOrder')}
+            </Link>
+            <span>•</span>
             <Link href="/delivery" className="hover:text-white transition-colors">
               Delivery Rates
             </Link>
