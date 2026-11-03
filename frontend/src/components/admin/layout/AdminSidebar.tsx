@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Package,
@@ -13,8 +13,6 @@ import {
   Settings,
   Layers,
   Award,
-  ChevronLeft,
-  ChevronRight,
   Shield,
   X,
 } from 'lucide-react';
@@ -42,12 +40,23 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({
   collapsed,
-  setCollapsed,
   mobileOpen,
   setMobileOpen,
 }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
+
+  // Warm up and prefetch all admin routes in the background so clicks are instant
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigationItems.forEach((item) => {
+        router.prefetch(item.href);
+      });
+      router.prefetch('/admin/products/new');
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [router]);
 
   return (
     <>
@@ -103,6 +112,7 @@ export function AdminSidebar({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.name : undefined}
                 className={cn(
@@ -124,9 +134,9 @@ export function AdminSidebar({
           })}
         </nav>
 
-        {/* User Role Tag & Collapse Toggle */}
-        <div className="p-3 border-t border-slate-800 flex flex-col gap-2">
-          {!collapsed && user && (
+        {/* User Role Tag */}
+        {!collapsed && user && (
+          <div className="p-3 border-t border-slate-800">
             <div className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-2.5">
               <Shield className="w-4 h-4 text-brand-neon shrink-0" />
               <div className="flex-1 min-w-0">
@@ -134,17 +144,8 @@ export function AdminSidebar({
                 <p className="text-[10px] text-slate-400 capitalize">{user.role.toLowerCase()}</p>
               </div>
             </div>
-          )}
-
-          {/* Desktop Collapse Toggle */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:flex items-center justify-center p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors w-full"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-          </button>
-        </div>
+          </div>
+        )}
       </aside>
     </>
   );

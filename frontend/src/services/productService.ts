@@ -210,7 +210,7 @@ export async function getFeaturedProducts(
   locale: AppLocale = 'en',
   limit: number = 6
 ): Promise<LocalizedProduct[]> {
-  const products = await getProducts(locale);
+  const products = await getProducts(locale, { limit });
   return products.slice(0, limit);
 }
 

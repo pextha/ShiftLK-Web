@@ -24,12 +24,12 @@
   },
   "nav": {
     "home": "முகப்பு",
-    "products": "உதிரிப்பாகங்கள்",
-    "trackOrder": "ஓடரை கண்காணிக்க",
+    "products": "பாகங்கள்",
+    "trackOrder": "ஓடர் நிலை",
     "about": "எம்மைப் பற்றி",
-    "delivery": "விநியோக விபரம்",
-    "returns": "உத்தரவாதம் & கொள்கைகள்",
-    "contact": "தொடர்புகளுக்கு",
+    "delivery": "விநியோகம்",
+    "returns": "உத்தரவாதம்",
+    "contact": "தொடர்பு",
     "categories": "வகைகள்"
   },
   "trackOrder": {

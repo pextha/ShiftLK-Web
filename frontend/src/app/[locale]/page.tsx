@@ -39,12 +39,12 @@ export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   const appLocale = locale as AppLocale;
 
-  const tHome = await getTranslations('home');
-  const tCommon = await getTranslations('common');
-  const tSearch = await getTranslations('search');
+  const [tHome, tCommon, tSearch, categories, featuredProducts] = await Promise.all([getTranslations('home'), getTranslations('common'), getTranslations('search'), getAllCategories(appLocale), getFeaturedProducts(appLocale, 8)]);
 
-  const categories = await getAllCategories(appLocale);
-  const featuredProducts = await getFeaturedProducts(appLocale, 8);
+
+
+
+
   const makesAndModels = getAllMakesAndModels();
 
   const getCategoryIcon = (slug: string) => {

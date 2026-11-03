@@ -76,7 +76,7 @@ export default function StickySearchBar({
 
           <button
             type="submit"
-            className="hidden sm:inline-flex items-center gap-1.5 bg-[#ccff00] hover:bg-[#b8e600] text-black px-5 py-3 text-sm font-black transition-all cursor-pointer shadow-sm active:scale-95"
+            className="hidden sm:inline-flex items-center gap-1.5 bg-[#ccff00] hover:bg-[#b8e600] text-black px-5 py-3 text-sm font-black transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 whitespace-nowrap"
           >
             <span>{t('searchBtn')}</span>
             <ArrowRight className="w-4 h-4" />

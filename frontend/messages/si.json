@@ -25,11 +25,11 @@
   "nav": {
     "home": "මුල් පිටුව",
     "products": "අමතර කොටස්",
-    "trackOrder": "ඇණවුම පරීක්ෂා කරන්න",
+    "trackOrder": "ඇණවුම් තත්ත්වය",
     "about": "අප ගැන",
     "delivery": "ප්‍රවාහන ගාස්තු",
-    "returns": "වගකීම් සහ ප්‍රතිපත්ති",
-    "contact": "විස්තර විමසීම්",
+    "returns": "වගකීම්",
+    "contact": "අමතන්න",
     "categories": "කාණ්ඩ"
   },
   "trackOrder": {

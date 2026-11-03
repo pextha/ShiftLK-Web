@@ -242,7 +242,7 @@ export default function ProductsPage() {
             Export CSV
           </Button>
 
-          <Link href="/admin/products/new">
+          <Link href="/admin/products/new" prefetch={true}>
             <Button size="sm" className="gap-2 font-bold shadow-lg shadow-brand-neon/20">
               <Plus className="w-4 h-4" />
               Add Product

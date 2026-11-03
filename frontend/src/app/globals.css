@@ -50,7 +50,7 @@
   /* =========================================================================
      Sinhala (si) Modern Typography System
      - Display / Headings / Badges / Buttons: Gemunu Libre (bold, geometric, futuristic)
-     - Body / Descriptions: Noto Sans Sinhala (clean, comfortable, legibility-tuned)
+     - Body / Navigation / Descriptions: Noto Sans Sinhala (clean, uniform, legibility-tuned)
      ========================================================================= */
   :lang(si) {
     font-family: var(--font-sinhala), var(--font-gemunu), var(--font-fallback);
@@ -66,13 +66,18 @@
   :lang(si) h6,
   :lang(si) .font-display,
   :lang(si) .font-heading,
-  :lang(si) button,
   :lang(si) .btn-neon,
-  :lang(si) .badge-neon,
-  :lang(si) nav a {
+  :lang(si) .badge-neon {
     font-family: var(--font-gemunu), var(--font-sinhala), var(--font-fallback);
     letter-spacing: 0.015em;
     line-height: 1.35;
+  }
+
+  :lang(si) nav a,
+  :lang(si) nav a span {
+    font-family: var(--font-sinhala), var(--font-fallback) !important;
+    letter-spacing: 0.005em;
+    line-height: 1.4;
   }
 
   /* Prevent tight tracking from squishing Sinhala glyphs */
@@ -91,7 +96,7 @@
   /* =========================================================================
      Tamil (ta) Modern Typography System
      - Display / Headings / Badges / Buttons: Anek Tamil (sharp, modern, impactful)
-     - Body / Descriptions: Noto Sans Tamil / Anek Tamil
+     - Body / Navigation / Descriptions: Noto Sans Tamil / Anek Tamil
      ========================================================================= */
   :lang(ta) {
     font-family: var(--font-tamil), var(--font-anek-tamil), var(--font-fallback);
@@ -107,13 +112,18 @@
   :lang(ta) h6,
   :lang(ta) .font-display,
   :lang(ta) .font-heading,
-  :lang(ta) button,
   :lang(ta) .btn-neon,
-  :lang(ta) .badge-neon,
-  :lang(ta) nav a {
+  :lang(ta) .badge-neon {
     font-family: var(--font-anek-tamil), var(--font-tamil), var(--font-fallback);
     letter-spacing: 0.015em;
     line-height: 1.35;
+  }
+
+  :lang(ta) nav a,
+  :lang(ta) nav a span {
+    font-family: var(--font-tamil), var(--font-anek-tamil), var(--font-fallback) !important;
+    letter-spacing: 0.005em;
+    line-height: 1.4;
   }
 
   /* Prevent tight tracking from squishing Tamil glyphs */
@@ -202,6 +212,13 @@
   animation: pulse-subtle 2.5s infinite ease-in-out;
 }
 
+/* Hide Next.js dev indicator pill in bottom-left corner */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-tools-button] {
+  display: none !important;
+}
+
 /* Print styles for admin packing slips / invoices */
 @media print {
   body {
@@ -223,5 +240,3 @@
     max-width: 100% !important;
   }
 }
-
-

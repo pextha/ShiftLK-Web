@@ -4,6 +4,16 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
+  reactStrictMode: false,
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "@tanstack/react-query",
+      "@tanstack/react-table",
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {
@@ -30,8 +40,8 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL
-      ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, '')
-      : 'http://localhost:4000';
+      ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, '').replace('http://localhost:', 'http://127.0.0.1:')
+      : 'http://127.0.0.1:4000';
     return [
       {
         source: '/api/v1/:path*',

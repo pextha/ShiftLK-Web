@@ -86,20 +86,28 @@ export interface CreateOrderResponse {
   whatsAppMessage: string;
 }
 
-const DEFAULT_API_BASE = 'http://localhost:4000/api/v1';
+// Use 127.0.0.1 on server-side SSR to avoid Windows IPv6 (::1) DNS lookup delay
+const DEFAULT_API_BASE =
+  typeof window === 'undefined'
+    ? 'http://127.0.0.1:4000/api/v1'
+    : 'http://localhost:4000/api/v1';
 
 export class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = (baseUrl || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE).replace(/\/$/, '');
+    const raw = (baseUrl || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE).replace(/\/$/, '');
+    this.baseUrl =
+      typeof window === 'undefined' ? raw.replace('http://localhost:', 'http://127.0.0.1:') : raw;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const isGet = !options.method || options.method.toUpperCase() === 'GET';
 
     try {
       const res = await fetch(url, {
+        ...(isGet && !options.cache ? { next: { revalidate: 15 } } : {}),
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -166,6 +174,7 @@ export class ApiClient {
 
     const res = await fetch(url, {
       method: 'GET',
+      next: { revalidate: 15 },
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',

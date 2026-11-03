@@ -24,12 +24,12 @@
   },
   "nav": {
     "home": "Home",
-    "products": "Spare Parts Catalog",
+    "products": "Spare Parts",
     "trackOrder": "Track Order",
     "about": "About Us",
-    "delivery": "Delivery Info",
-    "returns": "Returns & Warranty",
-    "contact": "Contact Us",
+    "delivery": "Delivery",
+    "returns": "Warranty",
+    "contact": "Contact",
     "categories": "Categories"
   },
   "trackOrder": {

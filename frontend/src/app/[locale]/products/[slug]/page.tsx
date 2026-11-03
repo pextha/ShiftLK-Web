@@ -59,14 +59,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const appLocale = locale as AppLocale;
 
-  const product = await getProductBySlug(slug, appLocale);
+  const [product, deliveryZones, tProd, tFilters] = await Promise.all([getProductBySlug(slug, appLocale), getDeliveryZones(), getTranslations('product'), getTranslations('filters')]);
   if (!product) {
     notFound();
   }
 
-  const deliveryZones = await getDeliveryZones();
-  const tProd = await getTranslations('product');
-  const tFilters = await getTranslations('filters');
+
+
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
