@@ -183,11 +183,22 @@
     "featuredTitle": "Featured & High-Demand Spares",
     "featuredSubtitle": "Genuine OEM spares, custom modifications & trending accessories in stock now",
     "viewAllParts": "Explore Full Catalog",
+    "placeYourOrder": "Place Your Order",
     "whyUsTitle": "Why Motorcyclists Choose ShiftLK",
     "ctaTitle": "Looking for a Specific Bike Part or Custom Sticker Kit?",
     "ctaSubtitle": "Send us your bike model, photo of your part, or custom sticker requirement on WhatsApp. Our specialists in Undurugoda, Polgasowita will assist you immediately.",
     "ctaButton": "Inquire Any Part on WhatsApp",
-    "deliveryBanner": "Fast Islandwide Delivery across Colombo, Kandy, Galle, Jaffna and all 25 districts of Sri Lanka."
+    "deliveryBanner": "Fast Islandwide Delivery across Colombo, Kandy, Galle, Jaffna and all 25 districts of Sri Lanka.",
+    "quickCategoryLabel": "Quick Browse by Category:",
+    "quickCatSpares": "Spare Parts",
+    "quickCatSparesSub": "Bajaj, Honda, Yamaha OEM",
+    "quickCatMods": "Modifications",
+    "quickCatModsSub": "LED, Exhausts, Mirrors & Guards",
+    "quickCatStickers": "Body Stickers",
+    "quickCatStickersSub": "Full Decal Kits & Custom Wraps",
+    "quickCatHelmets": "Helmets",
+    "quickCatHelmetsSub": "SLS Certified & Riding Visors",
+    "quickCatFooter": "Genuine Spares • Custom Mods • Body Stickers • SLS Helmets"
   },
   "about": {
     "title": "About ShiftLK Spares",

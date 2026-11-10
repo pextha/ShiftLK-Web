@@ -106,7 +106,7 @@ export default function HeroVideoAmbience() {
            ==================================================== */}
         <div className="relative w-full h-full overflow-hidden bg-slate-950">
           {/* Subtle cyan/emerald glow under the right video */}
-          <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-brand-neon/10 rounded-full blur-3xl" />
 
           <video
             ref={rightVideoRef}
@@ -155,7 +155,7 @@ export default function HeroVideoAmbience() {
           Ensures Hero title, subtitle, and buttons remain ultra-crisp & high-contrast
          ======================================================== */}
       <div className="absolute inset-0 bg-slate-950/30" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,8,13,0.92)_0%,rgba(6,8,13,0.65)_45%,rgba(6,8,13,0.3)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(3,3,4,0.92)_0%,rgba(3,3,4,0.65)_45%,rgba(3,3,4,0.3)_100%)]" />
 
       {/* Extreme top & bottom edge blend into surrounding page sections */}
       <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-slate-950 to-transparent" />

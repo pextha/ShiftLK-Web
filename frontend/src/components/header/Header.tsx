@@ -40,9 +40,9 @@ export default function Header() {
   const { totalItemsCount, setIsCartOpen } = useCart();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#06080d]/95 backdrop-blur-md border-b border-[#1c2436]">
+    <header className="sticky top-0 z-40 w-full bg-[#030304]/95 backdrop-blur-md border-b border-[#18181d]">
       {/* Top micro banner */}
-      <div className="bg-[#090d16] border-b border-[#1a2334] text-xs font-semibold py-1.5 px-4">
+      <div className="bg-[#070709] border-b border-[#18181d] text-xs font-semibold py-1.5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             <span className="bg-[#ccff00] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-sm shrink-0">
@@ -166,7 +166,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-slate-300 hover:text-[#ccff00] hover:bg-[#0e1422] rounded-xl border border-[#212c42]/80 hover:border-[#ccff00]/40 transition-colors cursor-pointer shrink-0"
+              className="relative p-2 text-slate-300 hover:text-[#ccff00] hover:bg-[#111115] rounded-xl border border-[#1e1e24]/80 hover:border-[#ccff00]/40 transition-colors cursor-pointer shrink-0"
               title="Shopping Cart"
               aria-label="Shopping Cart"
             >
@@ -182,7 +182,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setAdminModalOpen(true)}
-              className="p-2 text-slate-400 hover:text-[#ccff00] hover:bg-[#0e1422] rounded-xl border border-[#212c42]/60 hover:border-[#ccff00]/40 transition-colors cursor-pointer shrink-0"
+              className="p-2 text-slate-400 hover:text-[#ccff00] hover:bg-[#111115] rounded-xl border border-[#1e1e24]/60 hover:border-[#ccff00]/40 transition-colors cursor-pointer shrink-0"
               title="Staff & Admin Portal"
               aria-label="Staff & Admin Portal"
             >
@@ -205,7 +205,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-slate-300 hover:text-white bg-[#0e1422] border border-[#212c42] rounded-xl cursor-pointer shrink-0"
+              className="lg:hidden p-2 text-slate-300 hover:text-white bg-[#111115] border border-[#1e1e24] rounded-xl cursor-pointer shrink-0"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -225,19 +225,19 @@ export default function Header() {
 
       {/* Mobile drawer navigation */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-[#1c2436] bg-[#06080d]/98 backdrop-blur-xl px-4 py-4 space-y-3">
+        <div className="lg:hidden border-t border-[#18181d] bg-[#030304]/98 backdrop-blur-xl px-4 py-4 space-y-3">
           <div className="flex flex-col space-y-1.5 text-sm font-medium">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
             >
               {t('home')}
             </Link>
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] flex items-center justify-between transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] flex items-center justify-between transition-colors"
             >
               <span>{t('products')}</span>
               <span className="text-[10px] font-black bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/30 px-2 py-0.5 rounded-full">
@@ -247,7 +247,7 @@ export default function Header() {
             <Link
               href="/track-order"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] flex items-center gap-2 transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] flex items-center gap-2 transition-colors"
             >
               <PackageSearch className="w-4 h-4 text-[#ccff00]" />
               <span>{t('trackOrder')}</span>
@@ -255,34 +255,34 @@ export default function Header() {
             <Link
               href="/delivery"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
             >
               {t('delivery')} (25 Districts)
             </Link>
             <Link
               href="/returns"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
             >
               {t('returns')}
             </Link>
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
             >
               {t('about')}
             </Link>
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#0e1422] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
             >
               {t('contact')}
             </Link>
           </div>
 
-          <div className="pt-2 border-t border-[#1c2436] flex flex-col gap-2">
+          <div className="pt-2 border-t border-[#18181d] flex flex-col gap-2">
             <a
               href="https://wa.me/94770871018"
               target="_blank"

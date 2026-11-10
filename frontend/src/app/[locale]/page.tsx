@@ -4,30 +4,22 @@ import { getTranslations } from 'next-intl/server';
 import { AppLocale } from '@/lib/db/schema.types';
 import {
   getAllCategories,
-  getAllMakesAndModels,
   getFeaturedProducts,
-  SHIFTLK_SUPPORTED_BIKES,
 } from '@/services/productService';
 import ProductCard from '@/components/products/ProductCard';
 import HeroVideoAmbience from '@/components/home/HeroVideoAmbience';
 import {
   Wrench,
-  Search,
   Truck,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
   ArrowRight,
-  Car,
+  ArrowDown,
   ChevronRight,
-  Disc,
-  Cog,
-  Zap,
-  Sparkles,
   Flame,
   Palette,
   Shield,
   Bike,
+  ShoppingBag,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
@@ -39,13 +31,12 @@ export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   const appLocale = locale as AppLocale;
 
-  const [tHome, tCommon, tSearch, categories, featuredProducts] = await Promise.all([getTranslations('home'), getTranslations('common'), getTranslations('search'), getAllCategories(appLocale), getFeaturedProducts(appLocale, 8)]);
-
-
-
-
-
-  const makesAndModels = getAllMakesAndModels();
+  const [tHome, tCommon, categories, featuredProducts] = await Promise.all([
+    getTranslations('home'),
+    getTranslations('common'),
+    getAllCategories(appLocale),
+    getFeaturedProducts(appLocale, 8),
+  ]);
 
   const getCategoryIcon = (slug: string) => {
     switch (slug) {
@@ -64,8 +55,8 @@ export default async function HomePage({ params }: HomePageProps) {
 
   return (
     <div className="flex flex-col gap-12 sm:gap-16 pb-16">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-12 sm:py-20 border-b border-slate-800">
+      {/* Full-Viewport Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 min-h-[calc(100dvh-148px)] flex items-center justify-center py-16 sm:py-24 border-b border-slate-800">
         {/* Dual-side Ambient TikTok / Shorts Background Video Engine */}
         <HeroVideoAmbience />
 
@@ -73,8 +64,8 @@ export default async function HomePage({ params }: HomePageProps) {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-neon/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+          <div className="max-w-3xl mx-auto text-center space-y-5 sm:space-y-7">
             {/* Hero Brand Emblem Badge */}
             <div className="inline-flex items-center gap-2 bg-slate-900/90 border border-brand-neon/40 text-brand-neon text-xs font-bold px-4 py-1.5 rounded-full shadow-lg shadow-brand-neon/10 backdrop-blur-md">
               <Image
@@ -97,54 +88,23 @@ export default async function HomePage({ params }: HomePageProps) {
               {tHome('heroSubtitle')}
             </p>
 
-            {/* Quick Vehicle Make Filter Bar */}
-            <div className="pt-2">
-              <div className="bg-slate-900/95 border border-slate-700/80 p-3 sm:p-4 rounded-2xl shadow-2xl backdrop-blur-md max-w-2xl mx-auto">
-                <div className="text-xs font-bold text-slate-400 mb-2.5 text-left flex items-center gap-1.5">
-                  <Bike className="w-4 h-4 text-brand-neon" />
-                  <span>Quick Finder by Brand & Model:</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {SHIFTLK_SUPPORTED_BIKES.map((brand) => (
-                    <Link
-                      key={brand.make}
-                      href={`/products?make=${encodeURIComponent(brand.make)}`}
-                      className="flex flex-col p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-brand-neon/60 hover:shadow-[0_0_20px_rgba(204,255,0,0.15)] hover:bg-slate-850/90 transition-all text-left group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-black text-white group-hover:text-brand-neon transition-colors">
-                          {brand.make}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-brand-neon group-hover:translate-x-0.5 transition-all" />
-                      </div>
-                      <span className="text-[11px] text-slate-400 mt-1 line-clamp-1 group-hover:text-slate-300">
-                        {brand.popularModels.slice(0, 3).join(', ')}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">
-                    Bajaj (Pulsar, CT100) • Honda (Dio, Hornet, Shine) • Yamaha (FZ-S, R15, RayZR)
-                  </span>
-                  <Link
-                    href="/products"
-                    className="text-brand-neon font-bold hover:underline flex items-center gap-1 shrink-0 ml-2"
-                  >
-                    <span>{tHome('viewAllParts')}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
+            {/* Primary CTA: Place Your Order -> Smooth scrolls to Explore By Category */}
+            <div className="pt-4 flex justify-center">
+              <a
+                href="#explore-categories"
+                className="btn-neon group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-sm sm:text-base font-black shadow-[0_0_30px_rgba(204,255,0,0.3)] hover:shadow-[0_0_40px_rgba(204,255,0,0.5)] transition-all"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                <span>{tHome('placeYourOrder')}</span>
+                <ArrowDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Islandwide Delivery Highlight Strip */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-brand-neon/10 border border-brand-neon/20 text-brand-neon flex items-center justify-center shrink-0">
@@ -171,7 +131,10 @@ export default async function HomePage({ params }: HomePageProps) {
       </section>
 
       {/* Categories Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+      <section
+        id="explore-categories"
+        className="scroll-mt-28 max-w-7xl mx-auto px-4 sm:px-6 w-full"
+      >
         <div className="flex items-end justify-between mb-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -211,93 +174,6 @@ export default async function HomePage({ params }: HomePageProps) {
                 <ChevronRight className="w-3.5 h-3.5 ml-1" />
               </div>
             </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Motorcycle Categorisation Section (Bajaj, Honda, Yamaha) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-brand-neon animate-pulse"></span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-brand-neon">
-                Motorbike Categorisation
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
-              Select Your Bike by Brand & Model
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Genuine mechanical spares, modifications, body sticker kits, and accessories tailored for Bajaj, Honda, and Yamaha.
-            </p>
-          </div>
-          <Link
-            href="/products"
-            className="hidden sm:flex items-center gap-1 text-xs font-bold text-brand-neon hover:underline"
-          >
-            <span>View All Bikes</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {SHIFTLK_SUPPORTED_BIKES.map((bike) => (
-            <div
-              key={bike.make}
-              className="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xl transition-all"
-            >
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-slate-950 border border-brand-neon/30 text-brand-neon flex items-center justify-center font-black text-sm">
-                      <Bike className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-white">
-                        {bike.make}
-                      </h3>
-                      <p className="text-[11px] text-slate-400">
-                        {bike.tagline}
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/products?make=${encodeURIComponent(bike.make)}`}
-                    className="text-xs font-bold text-brand-neon hover:underline"
-                  >
-                    View All
-                  </Link>
-                </div>
-
-                <div className="pt-4 space-y-2">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Supported Models:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {bike.models.map((model) => (
-                      <Link
-                        key={model}
-                        href={`/products?make=${encodeURIComponent(bike.make)}&model=${encodeURIComponent(model)}`}
-                        className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-brand-neon hover:text-brand-neon hover:bg-slate-850 text-slate-300 transition-colors"
-                      >
-                        {model}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-800/80">
-                <Link
-                  href={`/products?make=${encodeURIComponent(bike.make)}`}
-                  className="flex items-center justify-between text-xs font-bold text-slate-300 hover:text-brand-neon transition-colors group"
-                >
-                  <span>Explore all {bike.make} parts & models</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
           ))}
         </div>
       </section>

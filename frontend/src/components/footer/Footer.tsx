@@ -18,9 +18,9 @@ export default function Footer() {
   const tContact = useTranslations('contact');
 
   return (
-    <footer className="bg-[#05070c] border-t border-[#1a2334] text-slate-400 text-sm mt-20">
+    <footer className="bg-[#030304] border-t border-[#18181d] text-slate-400 text-sm mt-20">
       {/* Trust bar */}
-      <div className="border-b border-[#1a2334] bg-[#090d16] py-8">
+      <div className="border-b border-[#18181d] bg-[#08080a] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-start gap-3.5">
             <div className="p-2.5 rounded-xl bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/25 shrink-0">
@@ -95,7 +95,7 @@ export default function Footer() {
                   href="https://facebook.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0f1523] border border-[#1f293d] flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600/20 hover:border-blue-500/40 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600/20 hover:border-blue-500/40 transition-colors"
                   aria-label="Facebook"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@ export default function Footer() {
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0f1523] border border-[#1f293d] flex items-center justify-center text-slate-400 hover:text-white hover:bg-pink-600/20 hover:border-pink-500/40 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-pink-600/20 hover:border-pink-500/40 transition-colors"
                   aria-label="Instagram"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@ export default function Footer() {
                   href="https://tiktok.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0f1523] border border-[#1f293d] flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-colors"
                   aria-label="TikTok"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -128,7 +128,7 @@ export default function Footer() {
                   href="https://youtube.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0f1523] border border-[#1f293d] flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600/20 hover:border-red-500/40 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600/20 hover:border-red-500/40 transition-colors"
                   aria-label="YouTube"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -240,7 +240,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom copyright */}
-        <div className="mt-12 pt-6 border-t border-[#1a2334] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div className="mt-12 pt-6 border-t border-[#18181d] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div>
             © {new Date().getFullYear()} ShiftLK Spares. {tCommon('allRightsReserved')}
           </div>

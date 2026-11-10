@@ -24,7 +24,7 @@ export default function LanguageSwitcher() {
 
   return (
     <div
-      className="inline-flex items-center bg-[#0a0e18] border border-[#1f293d] rounded-full p-1 shadow-sm backdrop-blur-md"
+      className="inline-flex items-center bg-[#08080a] border border-[#1e1e24] rounded-full p-1 shadow-sm backdrop-blur-md"
       role="group"
       aria-label="Language Selector"
     >
@@ -38,7 +38,7 @@ export default function LanguageSwitcher() {
         className={`px-2.5 py-1 text-xs rounded-full transition-all duration-150 cursor-pointer ${
           locale === 'en'
             ? 'bg-[#ccff00] text-black shadow-md font-black'
-            : 'text-slate-300 hover:text-white hover:bg-[#141b2b] font-medium'
+            : 'text-slate-300 hover:text-white hover:bg-[#141418] font-medium'
         }`}
         title="English"
       >
@@ -51,7 +51,7 @@ export default function LanguageSwitcher() {
         className={`px-2.5 py-1 text-xs rounded-full transition-all duration-150 cursor-pointer ${
           locale === 'si'
             ? 'bg-[#ccff00] text-black shadow-md font-black'
-            : 'text-slate-300 hover:text-white hover:bg-[#141b2b] font-medium'
+            : 'text-slate-300 hover:text-white hover:bg-[#141418] font-medium'
         }`}
         title="සිංහල (Sinhala)"
       >
@@ -64,7 +64,7 @@ export default function LanguageSwitcher() {
         className={`px-2.5 py-1 text-xs rounded-full transition-all duration-150 cursor-pointer ${
           locale === 'ta'
             ? 'bg-[#ccff00] text-black shadow-md font-black'
-            : 'text-slate-300 hover:text-white hover:bg-[#141b2b] font-medium'
+            : 'text-slate-300 hover:text-white hover:bg-[#141418] font-medium'
         }`}
         title="தமிழ் (Tamil)"
       >
