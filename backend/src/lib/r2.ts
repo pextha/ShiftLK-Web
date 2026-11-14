@@ -24,11 +24,29 @@ export const r2Client = new S3Client({
  */
 export function formatR2PublicUrl(key: string): string {
   const cleanKey = key.replace(/^\/+/, '');
-  if (env.R2_PUBLIC_DOMAIN && env.R2_PUBLIC_DOMAIN.trim() !== '') {
-    const base = env.R2_PUBLIC_DOMAIN.trim().replace(/\/+$/, '');
+  const domain = env.R2_PUBLIC_DOMAIN ? env.R2_PUBLIC_DOMAIN.trim() : '';
+  // Note: *.r2.cloudflarestorage.com is the private S3 API endpoint, not a public browser URL
+  if (domain !== '' && !domain.includes('.r2.cloudflarestorage.com')) {
+    const base = domain.replace(/\/+$/, '');
     return `${base}/${cleanKey}`;
   }
-  return `http://localhost:${env.PORT || 4000}/api/v1/media/${cleanKey}`;
+  return `/api/v1/media/${cleanKey}`;
+}
+
+/**
+ * Rewrites any stored private S3 API endpoint URL (*.r2.cloudflarestorage.com/...)
+ * to the public media proxy route or configured public CDN domain.
+ */
+export function normalizeStoredImageUrl(url: string): string {
+  if (!url) return url;
+  const trimmed = url.trim();
+  const r2PrivateMatch = trimmed.match(
+    /^https?:\/\/[^/]+\.r2\.cloudflarestorage\.com\/(?:shiftlkspares\/)?(.+)$/i
+  );
+  if (r2PrivateMatch && r2PrivateMatch[1]) {
+    return formatR2PublicUrl(r2PrivateMatch[1]);
+  }
+  return trimmed;
 }
 
 /**

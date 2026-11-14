@@ -3,19 +3,17 @@ import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/routing';
 import { getTranslations } from 'next-intl/server';
 import { AppLocale } from '@/lib/db/schema.types';
-import { getProductBySlug } from '@/services/productService';
+import { getProductBySlug, getPaginatedProducts } from '@/services/productService';
 import { getDeliveryZones } from '@/services/deliveryService';
 import ProductGallery from '@/components/products/ProductGallery';
 import LiveOrderSummary from '@/components/products/LiveOrderSummary';
+import ProductCard from '@/components/products/ProductCard';
 import {
   ChevronRight,
-  ShieldCheck,
-  Truck,
-  Car,
+  Bike,
   Wrench,
-  CheckCircle2,
-  AlertCircle,
   HelpCircle,
+  Sparkles,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 
@@ -59,17 +57,36 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const appLocale = locale as AppLocale;
 
-  const [product, deliveryZones, tProd, tFilters] = await Promise.all([getProductBySlug(slug, appLocale), getDeliveryZones(), getTranslations('product'), getTranslations('filters')]);
+  const [product, deliveryZones, tProd, tFilters] = await Promise.all([
+    getProductBySlug(slug, appLocale),
+    getDeliveryZones(),
+    getTranslations('product'),
+    getTranslations('filters'),
+  ]);
+
   if (!product) {
     notFound();
   }
 
+  // Fetch up to 4 related products from the same category
+  const relatedResult = await getPaginatedProducts(appLocale, {
+    categorySlug: product.category_slug || undefined,
+    limit: 5,
+    page: 1,
+  });
+  const relatedProducts = relatedResult.items
+    .filter((p) => p.id !== product.id && p.slug !== product.slug)
+    .slice(0, 4);
 
-
-
+  const relatedTitle =
+    appLocale === 'si'
+      ? 'සමාන අමතර කොටස් සහ උපාංග'
+      : appLocale === 'ta'
+      ? 'தொடர்புடைய உதிரிப்பாகங்கள்'
+      : 'Related Motorbike Spare Parts';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-xs text-slate-400 overflow-x-auto whitespace-nowrap pb-1">
         <Link href="/" className="hover:text-white transition-colors">
@@ -149,7 +166,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
               <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80">
                 <div className="text-slate-400 mb-0.5">Warranty</div>
-                <div className="font-bold text-emerald-400">7-Day Fitment Check</div>
+                <div className="font-bold text-emerald-400">One-to-One Replacement</div>
               </div>
             </div>
 
@@ -157,7 +174,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {product.compatibility && product.compatibility.length > 0 && (
               <div className="pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Car className="w-5 h-5 text-brand-neon" />
+                  <Bike className="w-5 h-5 text-brand-neon" />
                   <span>{tProd('vehicleCompatibility')}</span>
                 </h3>
 
@@ -168,7 +185,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         <th className="px-4 py-3">{tProd('make')}</th>
                         <th className="px-4 py-3">{tProd('model')}</th>
                         <th className="px-4 py-3">{tProd('yearRange')}</th>
-                        <th className="px-4 py-3">Chassis Code</th>
+                        <th className="px-4 py-3">Chassis / Variant</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
@@ -226,17 +243,25 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-white">
-                  Not Sure If It Fits Your Car?
+                  {appLocale === 'si'
+                    ? 'ඔබේ බයික් එකට ගැළපෙනවාදැයි සැකද?'
+                    : appLocale === 'ta'
+                    ? 'உங்கள் பைக்கிற்கு பொருந்துமா என சந்தேகமா?'
+                    : 'Not Sure If It Fits Your Bike?'}
                 </h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Send your vehicle registration book photo or chassis code (CR / V5) to our technicians on WhatsApp. We will cross-check the exact OEM parts catalog.
+                  {appLocale === 'si'
+                    ? 'ඔබේ බයික් මොඩලය, නිෂ්පාදිත වර්ෂය හෝ පරණ කොටසේ ඡායාරූපයක් වට්ස්ඇප් කරන්න. අපගේ කාර්මික ශිල්පීන් නිවැරදි OEM කොටස පරීක්ෂා කර දෙනු ඇත.'
+                    : appLocale === 'ta'
+                    ? 'உங்கள் பைக் மாடல், ஆண்டு அல்லது பழைய பாகத்தின் புகைப்படத்தை வாட்ஸ்அப் செய்யுங்கள். எமது தொழில்நுட்பவியலாளர்கள் சரிபார்த்து உதவுவார்கள்.'
+                    : 'Send your bike model, manufacturing year, or a photo of your old part on WhatsApp. Our technicians will verify exact OEM fitment before dispatch.'}
                 </p>
               </div>
             </div>
 
             <a
               href={`https://wa.me/94770871018?text=${encodeURIComponent(
-                `Hello ShiftLK Spares, I want to verify if part "${product.name}" (Part No: ${product.part_number}) fits my vehicle.`
+                `Hello ShiftLK Spares, I want to verify if part "${product.name}" (Part No: ${product.part_number}) fits my motorbike.`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -248,6 +273,35 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Related Spare Parts Section */}
+      {relatedProducts.length > 0 && (
+        <section className="pt-8 border-t border-slate-800/80 space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-brand-neon" />
+              <span>{relatedTitle}</span>
+            </h2>
+            <Link
+              href={
+                product.category_slug
+                  ? `/products?category=${product.category_slug}`
+                  : '/products'
+              }
+              className="text-xs font-bold text-brand-neon hover:underline flex items-center gap-1"
+            >
+              <span>View More</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {relatedProducts.map((relProduct) => (
+              <ProductCard key={relProduct.id} product={relProduct} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

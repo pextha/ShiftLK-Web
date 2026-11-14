@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Layers, X, Plus } from 'lucide-react';
+import { Layers, X, Plus, Wand2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
+import {
+  translateSparePartInstant,
+  translateSparePartSmart,
+} from '@/lib/utils/auto-translate';
 import { CategoryIcon, POPULAR_CATEGORY_ICONS } from './CategoryIcon';
 
 interface QuickAddCategoryDialogProps {
@@ -31,6 +35,9 @@ export function QuickAddCategoryDialog({
   const [icon, setIcon] = useState('Wrench');
   const [nameSi, setNameSi] = useState('');
   const [nameTa, setNameTa] = useState('');
+  const [siManual, setSiManual] = useState(false);
+  const [taManual, setTaManual] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleNameEnChange = (val: string) => {
     setNameEn(val);
@@ -41,6 +48,19 @@ export function QuickAddCategoryDialog({
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
       setSlug(generated);
+    }
+
+    const instant = translateSparePartInstant(val);
+    if (!siManual) setNameSi(instant.si);
+    if (!taManual) setNameTa(instant.ta);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (val.trim()) {
+      timerRef.current = setTimeout(async () => {
+        const smart = await translateSparePartSmart(val, 'title');
+        if (!siManual) setNameSi(smart.si);
+        if (!taManual) setNameTa(smart.ta);
+      }, 400);
     }
   };
 
@@ -172,26 +192,34 @@ export function QuickAddCategoryDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Sinhala Name (Optional)
+              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                <span>Sinhala Name (Auto)</span>
+                <Wand2 className="w-3 h-3 text-brand-neon" />
               </label>
               <Input
                 type="text"
                 value={nameSi}
-                onChange={(e) => setNameSi(e.target.value)}
+                onChange={(e) => {
+                  setSiManual(true);
+                  setNameSi(e.target.value);
+                }}
                 placeholder="උදා: බ්‍රේක් ඩිස්ක්"
                 className="bg-slate-900 border-slate-800 text-xs text-white focus:border-brand-neon"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Tamil Name (Optional)
+              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                <span>Tamil Name (Auto)</span>
+                <Wand2 className="w-3 h-3 text-brand-neon" />
               </label>
               <Input
                 type="text"
                 value={nameTa}
-                onChange={(e) => setNameTa(e.target.value)}
+                onChange={(e) => {
+                  setTaManual(true);
+                  setNameTa(e.target.value);
+                }}
                 placeholder="எ.கா: பிரேக் டிஸ்க்குகள்"
                 className="bg-slate-900 border-slate-800 text-xs text-white focus:border-brand-neon"
               />

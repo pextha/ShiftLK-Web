@@ -15,6 +15,7 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveProductImageUrl } from '@/lib/utils/image';
 import { Button } from '@/components/ui/button';
 
 export interface ImageItem {
@@ -97,12 +98,9 @@ export function ImageUploadDropzone({
         ? json.data
         : [json.data];
 
-      // Format full URL if backend returned relative path
-      const backendBase = apiUrl.replace(/\/api\/v1\/?$/, '');
+      // Normalize URL (convert private *.r2.cloudflarestorage.com to /api/v1/media/...)
       const newItems: ImageItem[] = uploadedList.map((item, idx) => {
-        const fullUrl = item.url.startsWith('http')
-          ? item.url
-          : `${backendBase}${item.url.startsWith('/') ? '' : '/'}${item.url}`;
+        const fullUrl = resolveProductImageUrl(item.url);
 
         const isFirstEver = images.length === 0 && idx === 0;
         return {
@@ -207,9 +205,7 @@ export function ImageUploadDropzone({
 
   const getDisplayUrl = (url: string) => {
     if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const base = apiUrl.replace(/\/api\/v1\/?$/, '');
-    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+    return resolveProductImageUrl(url);
   };
 
   const validImages = images.filter((img) => img.imageUrl && img.imageUrl.trim() !== '');

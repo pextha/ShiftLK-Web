@@ -34,7 +34,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       <div className="max-w-3xl space-y-3">
         <div className="inline-flex items-center gap-2 bg-brand-neon/10 border border-brand-neon/30 text-brand-neon text-xs font-bold px-3 py-1 rounded-full shadow-sm shadow-brand-neon/10">
           <Building className="w-3.5 h-3.5" />
-          <span>Automotive Spare Parts Network</span>
+          <span>Motorbike Spare Parts Network</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
           {tAbout('title')}

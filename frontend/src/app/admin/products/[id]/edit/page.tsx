@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -17,9 +17,15 @@ import {
   Bike,
   Boxes,
   History,
+  Wand2,
+  RefreshCw,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { formatLKR, cn } from '@/lib/utils';
+import {
+  translateSparePartInstant,
+  translateSparePartSmart,
+} from '@/lib/utils/auto-translate';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +58,7 @@ export default function EditProductPage() {
 
   // Basic Details
   const [partNumber, setPartNumber] = useState('');
+  const [partNumberMode, setPartNumberMode] = useState<'manual' | 'auto'>('manual');
   const [slug, setSlug] = useState('');
   const [brandId, setBrandId] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -67,6 +74,11 @@ export default function EditProductPage() {
   const [nameTa, setNameTa] = useState('');
   const [descTa, setDescTa] = useState('');
   const [activeTab, setActiveTab] = useState<'en' | 'si' | 'ta'>('en');
+  const [siManuallyEdited, setSiManuallyEdited] = useState(false);
+  const [taManuallyEdited, setTaManuallyEdited] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const titleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const descTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Pricing & Stock
   const [costPrice, setCostPrice] = useState<string>('0');
@@ -165,6 +177,97 @@ export default function EditProductPage() {
     }
   }, [product]);
 
+  // Smart Part Number generator (uses Brand + Category prefix when available)
+  const generateSmartPartNumber = (selectedBrandId?: string, selectedCategoryId?: string) => {
+    const bId = selectedBrandId ?? brandId;
+    const cId = selectedCategoryId ?? categoryId;
+    const brandObj = brands.find((b: any) => b.id === bId);
+    const catObj = categories.find((c: any) => c.id === cId);
+
+    const brandPrefix = brandObj?.name
+      ? brandObj.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase()
+      : '';
+    const catPrefix = catObj?.name
+      ? catObj.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase()
+      : '';
+
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+
+    const parts = ['SLK'];
+    if (brandPrefix) parts.push(brandPrefix);
+    if (catPrefix) parts.push(catPrefix);
+    if (!brandPrefix && !catPrefix) parts.push('PRT');
+    parts.push(String(randomDigits));
+
+    return parts.join('-');
+  };
+
+  // Auto-generate Sinhala & Tamil translations from English name
+  const handleNameEnChange = (val: string) => {
+    setNameEn(val);
+
+    const instant = translateSparePartInstant(val);
+    if (!siManuallyEdited) setNameSi(instant.si);
+    if (!taManuallyEdited) setNameTa(instant.ta);
+
+    if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
+    if (val.trim()) {
+      titleTimerRef.current = setTimeout(async () => {
+        setIsTranslating(true);
+        const smart = await translateSparePartSmart(val, 'title');
+        if (!siManuallyEdited) setNameSi(smart.si);
+        if (!taManuallyEdited) setNameTa(smart.ta);
+        setIsTranslating(false);
+      }, 400);
+    }
+  };
+
+  // Auto-generate Sinhala & Tamil descriptions from English description
+  const handleDescEnChange = (val: string) => {
+    setDescEn(val);
+
+    const instant = translateSparePartInstant(val);
+    if (!siManuallyEdited) setDescSi(instant.si);
+    if (!taManuallyEdited) setDescTa(instant.ta);
+
+    if (descTimerRef.current) clearTimeout(descTimerRef.current);
+    if (val.trim()) {
+      descTimerRef.current = setTimeout(async () => {
+        setIsTranslating(true);
+        const smart = await translateSparePartSmart(val, 'description');
+        if (!siManuallyEdited) setDescSi(smart.si);
+        if (!taManuallyEdited) setDescTa(smart.ta);
+        setIsTranslating(false);
+      }, 450);
+    }
+  };
+
+  // Force re-generate Sinhala & Tamil from current English title & description
+  const handleForceAutoTranslate = async () => {
+    if (!nameEn.trim() && !descEn.trim()) return;
+    setSiManuallyEdited(false);
+    setTaManuallyEdited(false);
+    setIsTranslating(true);
+
+    const [smartTitle, smartDesc] = await Promise.all([
+      nameEn.trim() ? translateSparePartSmart(nameEn, 'title') : Promise.resolve({ si: '', ta: '' }),
+      descEn.trim()
+        ? translateSparePartSmart(descEn, 'description')
+        : Promise.resolve({ si: '', ta: '' }),
+    ]);
+
+    if (nameEn.trim()) {
+      setNameSi(smartTitle.si);
+      setNameTa(smartTitle.ta);
+    }
+    if (descEn.trim()) {
+      setDescSi(smartDesc.si);
+      setDescTa(smartDesc.ta);
+    }
+    setIsTranslating(false);
+    success('Sinhala & Tamil translations auto-generated from English');
+  };
+
   // Profit & Margin calculations
   const cost = Number(costPrice) || 0;
   const selling = Number(sellingPrice) || 0;
@@ -253,15 +356,18 @@ export default function EditProductPage() {
       return;
     }
 
+    const fallbackTitleTrans = translateSparePartInstant(nameEn.trim());
+    const fallbackDescTrans = translateSparePartInstant(descEn.trim() || nameEn.trim());
+    const finalNameSi = nameSi.trim() || fallbackTitleTrans.si || nameEn.trim();
+    const finalDescSi = descSi.trim() || fallbackDescTrans.si || finalNameSi;
+    const finalNameTa = nameTa.trim() || fallbackTitleTrans.ta || nameEn.trim();
+    const finalDescTa = descTa.trim() || fallbackDescTrans.ta || finalNameTa;
+
     const translations = [
       { language: 'en', name: nameEn.trim(), description: descEn.trim() || nameEn.trim() },
+      { language: 'si', name: finalNameSi, description: finalDescSi },
+      { language: 'ta', name: finalNameTa, description: finalNameTa },
     ];
-    if (nameSi.trim()) {
-      translations.push({ language: 'si', name: nameSi.trim(), description: descSi.trim() || nameSi.trim() });
-    }
-    if (nameTa.trim()) {
-      translations.push({ language: 'ta', name: nameTa.trim(), description: descTa.trim() || nameTa.trim() });
-    }
 
     const validImages = images
       .filter((img) => img.imageUrl && img.imageUrl.trim() !== '')
@@ -293,7 +399,7 @@ export default function EditProductPage() {
 
     const payload = {
       slug: cleanSlug,
-      partNumber: partNumber.trim() || `PART-${Date.now().toString(36).toUpperCase()}`,
+      partNumber: partNumber.trim() || generateSmartPartNumber(),
       brandId,
       categoryId,
       condition,
@@ -370,21 +476,87 @@ export default function EditProductPage() {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="OEM / Part Number"
-                placeholder="e.g. 15100-28H00-000"
-                value={partNumber}
-                onChange={(e) => setPartNumber(e.target.value)}
-                required
-              />
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    OEM / Part Number
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setPartNumberMode('manual')}
+                      className={cn(
+                        'px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors border',
+                        partNumberMode === 'manual'
+                          ? 'bg-brand-neon/20 text-brand-neon border-brand-neon/40'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                      )}
+                    >
+                      Manual (OEM)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPartNumberMode('auto');
+                        setPartNumber(generateSmartPartNumber());
+                      }}
+                      className={cn(
+                        'px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors border flex items-center gap-1',
+                        partNumberMode === 'auto'
+                          ? 'bg-brand-neon text-black border-brand-neon'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-brand-neon hover:border-brand-neon/40'
+                      )}
+                    >
+                      <Wand2 className="w-3 h-3" />
+                      Auto-Generate
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={
+                      partNumberMode === 'manual'
+                        ? 'e.g. 15100-28H00-000 (or leave empty to auto-generate)'
+                        : 'Auto-generated ShiftLK Part No.'
+                    }
+                    value={partNumber}
+                    onChange={(e) => {
+                      setPartNumberMode('manual');
+                      setPartNumber(e.target.value);
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 pr-9 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-brand-neon focus:ring-1 focus:ring-brand-neon transition-all font-mono"
+                  />
+                  <button
+                    type="button"
+                    title="Auto-Generate Part Number"
+                    onClick={() => {
+                      setPartNumberMode('auto');
+                      setPartNumber(generateSmartPartNumber());
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-brand-neon hover:bg-slate-800 transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  {partNumberMode === 'auto'
+                    ? 'Auto-generated from Brand & Category. Click refresh icon for a new number.'
+                    : 'Enter company OEM part number, or click Auto-Generate if part has no code.'}
+                </p>
+              </div>
 
-              <Input
-                label="URL Slug"
-                placeholder="e.g. pulsar-150-front-brake-pad"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                required
-              />
+              <div>
+                <Input
+                  label="URL Slug"
+                  placeholder="e.g. pulsar-150-front-brake-pad"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Automatically generated from the English product name if left empty.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -405,7 +577,13 @@ export default function EditProductPage() {
                 </div>
                 <select
                   value={brandId}
-                  onChange={(e) => setBrandId(e.target.value)}
+                  onChange={(e) => {
+                    const nextBrandId = e.target.value;
+                    setBrandId(nextBrandId);
+                    if (partNumberMode === 'auto') {
+                      setPartNumber(generateSmartPartNumber(nextBrandId, categoryId));
+                    }
+                  }}
                   required
                   className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-neon"
                 >
@@ -435,7 +613,13 @@ export default function EditProductPage() {
                 </div>
                 <select
                   value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
+                  onChange={(e) => {
+                    const nextCatId = e.target.value;
+                    setCategoryId(nextCatId);
+                    if (partNumberMode === 'auto') {
+                      setPartNumber(generateSmartPartNumber(brandId, nextCatId));
+                    }
+                  }}
                   required
                   className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-neon"
                 >
@@ -468,48 +652,71 @@ export default function EditProductPage() {
 
           {/* Section 2: Multilingual Names & Descriptions */}
           <Card className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-white">
-                Multilingual Product Names & Descriptions
-              </h2>
-              {/* Tab Selector */}
-              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-white">
+                  Multilingual Product Names & Descriptions
+                </h2>
+                <p className="text-[11px] text-slate-400">
+                  Sinhala (සිංහල) and Tamil (தமிழ்) are automatically generated as you type in English.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setActiveTab('en')}
-                  className={cn(
-                    'px-3 py-1 rounded-lg text-xs font-bold transition-colors',
-                    activeTab === 'en'
-                      ? 'bg-brand-neon/20 text-brand-neon'
-                      : 'text-slate-400 hover:text-white'
-                  )}
+                  onClick={handleForceAutoTranslate}
+                  disabled={!nameEn.trim() && !descEn.trim()}
+                  className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-brand-neon/15 text-brand-neon border border-brand-neon/30 hover:bg-brand-neon hover:text-black transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  English *
+                  <Wand2 className={cn('w-3.5 h-3.5', isTranslating && 'animate-spin')} />
+                  <span>{isTranslating ? 'Translating...' : 'Auto-Translate SI & TA'}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('si')}
-                  className={cn(
-                    'px-3 py-1 rounded-lg text-xs font-bold transition-colors',
-                    activeTab === 'si'
-                      ? 'bg-brand-neon/20 text-brand-neon'
-                      : 'text-slate-400 hover:text-white'
-                  )}
-                >
-                  සිංහල (Sinhala)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('ta')}
-                  className={cn(
-                    'px-3 py-1 rounded-lg text-xs font-bold transition-colors',
-                    activeTab === 'ta'
-                      ? 'bg-brand-neon/20 text-brand-neon'
-                      : 'text-slate-400 hover:text-white'
-                  )}
-                >
-                  தமிழ் (Tamil)
-                </button>
+
+                {/* Tab Selector */}
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('en')}
+                    className={cn(
+                      'px-3 py-1 rounded-lg text-xs font-bold transition-colors',
+                      activeTab === 'en'
+                        ? 'bg-brand-neon/20 text-brand-neon'
+                        : 'text-slate-400 hover:text-white'
+                    )}
+                  >
+                    English *
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('si')}
+                    className={cn(
+                      'px-3 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5',
+                      activeTab === 'si'
+                        ? 'bg-brand-neon/20 text-brand-neon'
+                        : 'text-slate-400 hover:text-white'
+                    )}
+                  >
+                    <span>සිංහල (Sinhala)</span>
+                    {nameSi.trim() && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ta')}
+                    className={cn(
+                      'px-3 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5',
+                      activeTab === 'ta'
+                        ? 'bg-brand-neon/20 text-brand-neon'
+                        : 'text-slate-400 hover:text-white'
+                    )}
+                  >
+                    <span>தமிழ் (Tamil)</span>
+                    {nameTa.trim() && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -518,9 +725,9 @@ export default function EditProductPage() {
               <div className="space-y-4 animate-in fade-in">
                 <Input
                   label="Product Title (English) *"
-                  placeholder="e.g. Front Disc Brake Pad Set - Bajaj Pulsar 150/180"
+                  placeholder="e.g. Yamaha Gasket Cylinder FZ V1/V2/V3"
                   value={nameEn}
-                  onChange={(e) => setNameEn(e.target.value)}
+                  onChange={(e) => handleNameEnChange(e.target.value)}
                   required
                 />
                 <div>
@@ -531,10 +738,63 @@ export default function EditProductPage() {
                     rows={4}
                     placeholder="High friction ceramic pads for superior stopping power and heat dissipation..."
                     value={descEn}
-                    onChange={(e) => setDescEn(e.target.value)}
+                    onChange={(e) => handleDescEnChange(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-neon"
                   />
                 </div>
+
+                {/* Live Auto-Generated Sinhala & Tamil Preview */}
+                {(nameSi.trim() || nameTa.trim()) && (
+                  <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-brand-neon flex items-center gap-1.5">
+                        <Wand2 className="w-3.5 h-3.5" />
+                        Auto-Generated Sinhala & Tamil Preview
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        Click a language tab above to customize manually
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-400">සිංහල (Sinhala)</span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('si')}
+                            className="text-[10px] text-brand-neon hover:underline font-semibold"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        <div className="font-bold text-white font-sinhala">{nameSi}</div>
+                        {descSi && (
+                          <div className="text-[11px] text-slate-400 font-sinhala line-clamp-2">
+                            {descSi}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-400">தமிழ் (Tamil)</span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('ta')}
+                            className="text-[10px] text-brand-neon hover:underline font-semibold"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        <div className="font-bold text-white font-tamil">{nameTa}</div>
+                        {descTa && (
+                          <div className="text-[11px] text-slate-400 font-tamil line-clamp-2">
+                            {descTa}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -545,7 +805,10 @@ export default function EditProductPage() {
                   label="භාණ්ඩයේ නම (Sinhala)"
                   placeholder="උදා: ඉදිරිපස ඩිස්ක් බ්‍රේක් පෑඩ් කට්ටලය - බජාජ් පල්සර් 150"
                   value={nameSi}
-                  onChange={(e) => setNameSi(e.target.value)}
+                  onChange={(e) => {
+                    setSiManuallyEdited(true);
+                    setNameSi(e.target.value);
+                  }}
                 />
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -555,7 +818,10 @@ export default function EditProductPage() {
                     rows={4}
                     placeholder="ඉහළ තාප ප්‍රතිරෝධී උසස් තත්වයේ බ්‍රේක් පෑඩ්..."
                     value={descSi}
-                    onChange={(e) => setDescSi(e.target.value)}
+                    onChange={(e) => {
+                      setSiManuallyEdited(true);
+                      setDescSi(e.target.value);
+                    }}
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-neon font-sinhala"
                   />
                 </div>
@@ -569,7 +835,10 @@ export default function EditProductPage() {
                   label="பொருளின் பெயர் (Tamil)"
                   placeholder="எ.கா. முன் டிஸ்க் பிரேக் பேட் - பஜாஜ் பல்சர் 150"
                   value={nameTa}
-                  onChange={(e) => setNameTa(e.target.value)}
+                  onChange={(e) => {
+                    setTaManuallyEdited(true);
+                    setNameTa(e.target.value);
+                  }}
                 />
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -579,7 +848,10 @@ export default function EditProductPage() {
                     rows={4}
                     placeholder="உயர்தர பிரேக் பேட்கள்..."
                     value={descTa}
-                    onChange={(e) => setDescTa(e.target.value)}
+                    onChange={(e) => {
+                      setTaManuallyEdited(true);
+                      setDescTa(e.target.value);
+                    }}
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-neon font-tamil"
                   />
                 </div>
@@ -780,15 +1052,20 @@ export default function EditProductPage() {
               </p>
             </div>
 
-            <Input
-              label="Shipping Weight (kg)"
-              type="number"
-              step="0.05"
-              min="0.05"
-              value={weightKg}
-              onChange={(e) => setWeightKg(e.target.value)}
-              required
-            />
+            <div>
+              <Input
+                label="Shipping Weight (kg)"
+                type="number"
+                step="0.05"
+                min="0.05"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                required
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Used to calculate courier fees (First 1kg = Rs. 425, +Rs. 100/kg extra; Stickers &le; 0.25kg = Rs. 220).
+              </p>
+            </div>
 
             <div className="pt-2 border-t border-slate-800">
               <label className="flex items-center gap-3 cursor-pointer">

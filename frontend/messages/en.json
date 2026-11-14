@@ -138,7 +138,7 @@
     "addressPlaceholder": "e.g. No. 45/2, Temple Road, Maharagama",
     "district": "Delivery District",
     "notes": "Additional Notes / Chassis Number (Optional)",
-    "notesPlaceholder": "e.g. Vehicle chassis number (e.g. ZVW30-xxxxxx) or deliver after 3 PM",
+    "notesPlaceholder": "e.g. Bike model & year (Pulsar 150 UG4 / Yamaha FZ V2) or deliver after 3 PM",
     "orderSummary": "Order Summary",
     "unitPrice": "Unit Price",
     "qty": "Quantity",
@@ -225,10 +225,10 @@
   "returns": {
     "title": "Returns & Warranty Policy",
     "subtitle": "Fair, transparent policies designed to give you complete peace of mind",
-    "p1Title": "7-Day Fitment Verification Guarantee",
+    "p1Title": "One-to-One Replacement Guarantee",
     "p1Desc": "If an item received does not match the specifications or vehicle compatibility agreed upon, contact us within 7 days of delivery for an immediate replacement or full refund.",
     "p2Title": "Electrical vs. Mechanical Parts",
-    "p2Desc": "Mechanical components carry our standard replacement guarantee. For delicate electrical sensors, alternators, and computers, please install with a certified automobile electrician.",
+    "p2Desc": "Mechanical motorbike parts carry our standard one-to-one replacement guarantee. For delicate electrical parts (CDI units, stator coils, rectifiers, and sensors), please install with an experienced motorcycle technician.",
     "p3Title": "Condition of Returned Items",
     "p3Desc": "Items must be returned in their original packaging, uninstalled, without grease or mounting marks."
   },
@@ -239,6 +239,6 @@
     "phone": "077 087 1018",
     "whatsapp": "+94 77 087 1018",
     "email": "support@shiftlk.lk",
-    "hours": "Monday - Saturday: 8:30 AM - 6:30 PM | Sunday: 9:00 AM - 2:00 PM"
+    "hours": "Open 24 Hours — Every 365 Days (Including Sundays & Poya Days)"
   }
 }

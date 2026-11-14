@@ -1,9 +1,63 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import createIntlMiddleware from 'next-intl/middleware';
-import { routing } from './i18n/routing';
+import { routing, type Locale } from './i18n/routing';
 
 const intlMiddleware = createIntlMiddleware(routing);
+
+/**
+ * 4-Tier Locale Resolution:
+ * 1. Visitor's manually saved language (SHIFTLK_LOCALE cookie)
+ * 2. Browser language (Accept-Language: 'ta' -> Tamil, 'si' -> Sinhala)
+ * 3. IP Country via Cloudflare ('cf-ipcountry' === 'LK' -> Sinhala, other country -> English)
+ * 4. Default: 'en' (English)
+ */
+function detectPreferredLocale(request: NextRequest): {
+  locale: Locale;
+  countryCode: string | null;
+} {
+  const cfCountry =
+    request.headers.get('cf-ipcountry') ||
+    request.headers.get('x-vercel-ip-country') ||
+    request.headers.get('x-country-code') ||
+    null;
+  const countryCode = cfCountry ? cfCountry.toUpperCase() : null;
+
+  // Tier 1: Visitor manually chosen language cookie
+  const manualLocale = request.cookies.get('SHIFTLK_LOCALE')?.value as
+    | Locale
+    | undefined;
+  if (manualLocale && routing.locales.includes(manualLocale)) {
+    return { locale: manualLocale, countryCode };
+  }
+
+  // Tier 2: Browser Accept-Language ('ta' -> Tamil, 'si' -> Sinhala)
+  const acceptLang = request.headers.get('accept-language') || '';
+  const langTags = acceptLang
+    .split(',')
+    .map((part) => part.split(';')[0].trim().toLowerCase())
+    .filter(Boolean);
+
+  for (const tag of langTags) {
+    if (tag === 'ta' || tag.startsWith('ta-')) {
+      return { locale: 'ta', countryCode };
+    }
+    if (tag === 'si' || tag.startsWith('si-')) {
+      return { locale: 'si', countryCode };
+    }
+  }
+
+  // Tier 3: IP Location via Cloudflare (Sri Lanka 'LK' -> Sinhala, other countries -> English)
+  if (countryCode) {
+    if (countryCode === 'LK') {
+      return { locale: 'si', countryCode };
+    }
+    return { locale: 'en', countryCode };
+  }
+
+  // Tier 4: Default fallback -> English
+  return { locale: 'en', countryCode };
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -49,13 +103,46 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Customer Storefront (next-intl localization for /, /en, /si, /ta)
-  return intlMiddleware(request);
+  // 3. Customer Storefront: Smart 4-Tier Language Detection on entry paths without explicit locale prefix
+  const hasExplicitLocalePrefix = routing.locales.some(
+    (loc) => pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)
+  );
+
+  const { locale: detectedLocale, countryCode } = detectPreferredLocale(request);
+
+  // If the visitor lands on a path without an explicit /si or /ta prefix (e.g., '/')
+  // and our 4-tier detector resolves 'si' or 'ta', redirect cleanly to that locale
+  if (!hasExplicitLocalePrefix && detectedLocale !== routing.defaultLocale) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname =
+      pathname === '/' ? `/${detectedLocale}` : `/${detectedLocale}${pathname}`;
+    const response = NextResponse.redirect(redirectUrl);
+    response.cookies.set('NEXT_LOCALE', detectedLocale, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    });
+    if (countryCode) {
+      response.cookies.set('SHIFTLK_COUNTRY', countryCode, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+        sameSite: 'lax',
+      });
+    }
+    return response;
+  }
+
+  const response = intlMiddleware(request);
+  if (countryCode) {
+    response.cookies.set('SHIFTLK_COUNTRY', countryCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: 'lax',
+    });
+  }
+  return response;
 }
 
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };

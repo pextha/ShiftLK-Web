@@ -42,13 +42,13 @@ export default function StickySearchBar({
     <div className={`w-full ${className}`}>
       <form onSubmit={handleSearch} className="relative w-full">
         <div
-          className={`relative flex items-center bg-[#08080a] border transition-all duration-200 rounded-2xl shadow-xl overflow-hidden ${
+          className={`relative flex items-center bg-slate-900 border transition-all duration-200 rounded-2xl shadow-lg overflow-hidden ${
             isFocused
-              ? 'border-[#ccff00] ring-2 ring-[#ccff00]/25 shadow-[0_0_25px_rgba(204,255,0,0.2)]'
-              : 'border-[#1e1e24] hover:border-slate-600'
+              ? 'border-brand-neon ring-2 ring-brand-neon/25 shadow-[0_0_25px_rgba(204,255,0,0.2)]'
+              : 'border-slate-800 hover:border-slate-600'
           }`}
         >
-          <div className="pl-3.5 pr-2 text-[#ccff00] flex items-center pointer-events-none">
+          <div className="pl-3.5 pr-2 text-brand-neon flex items-center pointer-events-none">
             <Search className="w-5 h-5" />
           </div>
 
@@ -85,9 +85,9 @@ export default function StickySearchBar({
 
         {/* Quick popular OEM suggestions when focused */}
         {isFocused && !query && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0d] border border-[#1e1e24] rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-1 text-xs text-slate-300">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-1 text-xs text-slate-300">
             <div className="text-[11px] font-bold tracking-wider uppercase text-slate-400 mb-2 flex items-center gap-1.5">
-              <Wrench className="w-3.5 h-3.5 text-[#ccff00]" />
+              <Wrench className="w-3.5 h-3.5 text-brand-neon" />
               <span>Popular Motorbike Searches in Sri Lanka:</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -108,7 +108,7 @@ export default function StickySearchBar({
                     setQuery(suggestion);
                     router.push(`/products?q=${encodeURIComponent(suggestion)}`);
                   }}
-                  className="bg-[#141418] hover:bg-[#ccff00]/15 hover:text-[#ccff00] border border-[#1e1e24] hover:border-[#ccff00]/50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer font-medium"
+                  className="bg-slate-850 hover:bg-brand-neon/15 hover:text-brand-neon border border-slate-800 hover:border-brand-neon/50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer font-medium"
                 >
                   {suggestion}
                 </button>

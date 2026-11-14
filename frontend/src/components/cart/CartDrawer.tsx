@@ -191,8 +191,8 @@ export default function CartDrawer() {
                 {step === 'checkout'
                   ? tModal('title')
                   : step === 'success'
-                  ? tModal('successTitle')
-                  : `Your Parts Cart (${totalItemsCount})`}
+                    ? tModal('successTitle')
+                    : `Your Parts Cart (${totalItemsCount})`}
               </h3>
               <p className="text-[11px] text-slate-400">
                 {step === 'checkout'

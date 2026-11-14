@@ -1,3 +1,5 @@
+import { normalizeStoredImageUrl } from '../lib/r2';
+
 export interface PublicProductDto {
   id: string;
   slug: string;
@@ -74,7 +76,7 @@ export function toPublicProductDto(product: any, locale: string = 'en'): PublicP
   const images = Array.isArray(product.images)
     ? [...product.images]
         .sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0))
-        .map((img: any) => img.imageUrl)
+        .map((img: any) => normalizeStoredImageUrl(img.imageUrl))
     : [];
 
   // Compatibility array

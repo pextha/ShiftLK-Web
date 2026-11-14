@@ -114,10 +114,18 @@ export default async function ProductsPage({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Motorbike Spare Parts & Accessories Catalog
+            {appLocale === 'si'
+              ? 'මෝටර්බයික් අමතර කොටස් සහ උපාංග නාමාවලිය'
+              : appLocale === 'ta'
+              ? 'மோட்டார் பைக் உதிரிப்பாகங்கள் மற்றும் பாகங்கள் பட்டியல்'
+              : 'Motorbike Spare Parts & Accessories Catalog'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Genuine OEM Indian bike spares (Bajaj, Yamaha), custom modification parts, body stickers, and certified helmets.
+            {appLocale === 'si'
+              ? 'ඔරිජිනල් ඉන්දියන් බයික් අමතර කොටස් (Bajaj, Yamaha, TVS, Honda), මොඩිෆිකේෂන් කොටස්, බොඩි ස්ටිකර් සහ ප්‍රමිතිගත හෙල්මට්.'
+              : appLocale === 'ta'
+              ? 'அசல் இந்திய பைக் உதிரிப்பாகங்கள் (Bajaj, Yamaha, TVS, Honda), மாடிஃபிகேஷன் பாகங்கள், பாடி ஸ்டிக்கர்கள் மற்றும் ஹெல்மெட்டுகள்.'
+              : 'Genuine OEM Indian bike spares (Bajaj, Yamaha, TVS, Honda), custom modification parts, body stickers, and certified helmets.'}
           </p>
         </div>
       </div>

@@ -18,12 +18,12 @@ export default function Footer() {
   const tContact = useTranslations('contact');
 
   return (
-    <footer className="bg-[#030304] border-t border-[#18181d] text-slate-400 text-sm mt-20">
+    <footer className="bg-slate-950 border-t border-slate-800 text-slate-400 text-sm mt-20 transition-colors">
       {/* Trust bar */}
-      <div className="border-b border-[#18181d] bg-[#08080a] py-8">
+      <div className="border-b border-slate-800 bg-slate-900 py-8 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/25 shrink-0">
+            <div className="p-2.5 rounded-xl bg-brand-neon/10 text-brand-neon border border-brand-neon/25 shrink-0">
               <Truck className="w-5 h-5" />
             </div>
             <div>
@@ -51,7 +51,7 @@ export default function Footer() {
           </div>
 
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/25 shrink-0">
+            <div className="p-2.5 rounded-xl bg-brand-neon/10 text-brand-neon border border-brand-neon/25 shrink-0">
               <MessageCircle className="w-5 h-5" />
             </div>
             <div>
@@ -77,13 +77,22 @@ export default function Footer() {
                 alt="ShiftLK Spares - Precious Parts For Every Ride"
                 width={170}
                 height={68}
-                className="h-11 w-auto object-contain transition-transform group-hover:scale-105"
+                unoptimized
+                className="logo-dark-only h-11 w-auto object-contain transition-transform group-hover:scale-105"
+              />
+              <Image
+                src="/assets/shiftlk-logo-light.png"
+                alt="ShiftLK Spares - Precious Parts For Every Ride"
+                width={170}
+                height={68}
+                unoptimized
+                className="logo-light-only h-11 w-auto object-contain transition-transform group-hover:scale-105"
               />
             </Link>
             <p className="text-xs text-slate-400 leading-relaxed">
               Sri Lanka&apos;s dedicated motorbike spare parts destination. Specializing in Indian bike spares (Bajaj, Yamaha), custom modifications, body stickers, and helmets in Polgasowita.
             </p>
-            <div className="inline-flex items-center gap-2 bg-[#ccff00]/10 border border-[#ccff00]/25 px-2.5 py-1 rounded-lg text-[10px] font-black text-[#ccff00] tracking-wider uppercase">
+            <div className="inline-flex items-center gap-2 bg-brand-neon/10 border border-brand-neon/25 px-2.5 py-1 rounded-lg text-[10px] font-black text-brand-neon tracking-wider uppercase">
               Precious Parts For Every Ride
             </div>
 
@@ -95,7 +104,7 @@ export default function Footer() {
                   href="https://facebook.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600/20 hover:border-blue-500/40 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600/20 hover:border-blue-500/40 transition-colors"
                   aria-label="Facebook"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -106,7 +115,7 @@ export default function Footer() {
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-pink-600/20 hover:border-pink-500/40 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-pink-600/20 hover:border-pink-500/40 transition-colors"
                   aria-label="Instagram"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -117,7 +126,7 @@ export default function Footer() {
                   href="https://tiktok.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-colors"
                   aria-label="TikTok"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -128,7 +137,7 @@ export default function Footer() {
                   href="https://youtube.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[#0c0c0f] border border-[#1e1e24] flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600/20 hover:border-red-500/40 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-600/20 hover:border-red-500/40 transition-colors"
                   aria-label="YouTube"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -146,37 +155,37 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/" className="hover:text-[#ccff00] transition-colors">
+                <Link href="/" className="hover:text-brand-neon transition-colors">
                   {tNav('home')}
                 </Link>
               </li>
               <li>
-                <Link href="/products" className="hover:text-[#ccff00] transition-colors">
+                <Link href="/products" className="hover:text-brand-neon transition-colors">
                   {tNav('products')}
                 </Link>
               </li>
               <li>
-                <Link href="/track-order" className="hover:text-[#ccff00] transition-colors text-[#ccff00] font-semibold">
+                <Link href="/track-order" className="hover:text-brand-neon transition-colors text-brand-neon font-semibold">
                   {tNav('trackOrder')}
                 </Link>
               </li>
               <li>
-                <Link href="/delivery" className="hover:text-[#ccff00] transition-colors">
+                <Link href="/delivery" className="hover:text-brand-neon transition-colors">
                   {tNav('delivery')} (25 Districts)
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="hover:text-[#ccff00] transition-colors">
+                <Link href="/returns" className="hover:text-brand-neon transition-colors">
                   {tNav('returns')}
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-[#ccff00] transition-colors">
+                <Link href="/about" className="hover:text-brand-neon transition-colors">
                   {tNav('about')}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-[#ccff00] transition-colors">
+                <Link href="/contact" className="hover:text-brand-neon transition-colors">
                   {tNav('contact')}
                 </Link>
               </li>
@@ -190,17 +199,17 @@ export default function Footer() {
             </h4>
             <div className="space-y-2 text-xs text-slate-400">
               <div className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-[#ccff00] shrink-0 mt-0.5" />
+                <Clock className="w-4 h-4 text-brand-neon shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-semibold text-slate-200">Monday - Saturday</div>
-                  <div>8:30 AM - 6:30 PM</div>
+                  <div className="font-semibold text-slate-200">24 Hours</div>
+                  <div>Every 365 Days</div>
                 </div>
               </div>
               <div className="flex items-start gap-2 pt-1">
-                <Clock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                <Clock className="w-4 h-4 text-brand-neon shrink-0 mt-0.5" />
                 <div>
                   <div className="font-semibold text-slate-200">Sunday & Poya</div>
-                  <div>9:00 AM - 2:00 PM (Emergency Dispatch)</div>
+                  <div>Open 24 Hours (24/7 Dispatch)</div>
                 </div>
               </div>
             </div>
@@ -213,15 +222,15 @@ export default function Footer() {
             </h4>
             <div className="space-y-2.5 text-xs text-slate-400">
               <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#ccff00] shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-brand-neon shrink-0 mt-0.5" />
                 <span>{tContact('address')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#ccff00] shrink-0" />
+                <Phone className="w-4 h-4 text-brand-neon shrink-0" />
                 <span>{tContact('phone')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#ccff00] shrink-0" />
+                <Mail className="w-4 h-4 text-brand-neon shrink-0" />
                 <span>{tContact('email')}</span>
               </div>
               <div className="pt-2">
@@ -240,7 +249,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom copyright */}
-        <div className="mt-12 pt-6 border-t border-[#18181d] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div>
             © {new Date().getFullYear()} ShiftLK Spares. {tCommon('allRightsReserved')}
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layers, X, Sparkles, Check, Globe } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
@@ -9,6 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
+import {
+  translateSparePartInstant,
+  translateSparePartSmart,
+} from '@/lib/utils/auto-translate';
 import { CategoryIcon, POPULAR_CATEGORY_ICONS } from './CategoryIcon';
 
 interface CategoryModalProps {
@@ -80,7 +84,8 @@ export function CategoryModal({
     setActiveTab('en');
   }, [category, isOpen]);
 
-  // Auto-slug from English name
+  // Auto-slug + Auto-translate from English name
+  const titleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleNameEnChange = (val: string) => {
     setNameEn(val);
     if (!isSlugManual && !isEdit) {
@@ -90,6 +95,21 @@ export function CategoryModal({
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
       setSlug(generated);
+    }
+
+    if (!isEdit) {
+      const instant = translateSparePartInstant(val);
+      setNameSi(instant.si);
+      setNameTa(instant.ta);
+
+      if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
+      if (val.trim()) {
+        titleTimerRef.current = setTimeout(async () => {
+          const smart = await translateSparePartSmart(val, 'title');
+          setNameSi(smart.si);
+          setNameTa(smart.ta);
+        }, 400);
+      }
     }
   };
 

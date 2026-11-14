@@ -12,6 +12,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { Button } from '@/components/admin/ui/button';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 
@@ -49,6 +50,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
 
         {/* Right: Quick Customer Store Link & User Profile Dropdown */}
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {/* Quick link to customer-facing website */}
           <Link
             href={customerSiteUrl}

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { formatLKR, cn } from '@/lib/utils';
+import { resolveProductImageUrl } from '@/lib/utils/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,9 +91,7 @@ export default function ProductsPage() {
 
   const getMediaUrl = (url?: string | null) => {
     if (!url) return null;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    return `${base.replace(/\/api\/v1\/?$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
+    return resolveProductImageUrl(url);
   };
 
   const products: any[] = Array.isArray(productData)

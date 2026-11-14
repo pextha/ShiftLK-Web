@@ -3,6 +3,7 @@ import { Inter, Outfit } from 'next/font/google';
 import '../globals.css';
 import { QueryProvider } from '@/lib/query-client';
 import { AuthProvider } from '@/lib/auth-context';
+import { ThemeProvider } from '@/lib/theme-context';
 import { ToastProvider } from '@/components/common/Toast';
 import { AdminShell } from '@/components/admin/layout/AdminShell';
 
@@ -38,13 +39,15 @@ export default function AdminLayout({
   return (
     <html lang="en" className={`dark ${inter.variable} ${outfit.variable}`}>
       <body className="bg-slate-950 text-slate-100 antialiased font-sans selection:bg-brand-neon/30 selection:text-white">
-        <QueryProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <AdminShell>{children}</AdminShell>
-            </ToastProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <AdminShell>{children}</AdminShell>
+              </ToastProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

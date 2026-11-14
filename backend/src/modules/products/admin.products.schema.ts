@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
+const generateFallbackPartNumber = () =>
+  `SLK-PRT-${Math.floor(1000 + Math.random() * 9000)}`;
+
 export const createProductSchema = z.object({
   slug: z.string().min(2).max(191),
   partNumber: z
     .string()
+    .optional()
     .default('')
-    .transform((val) => val.trim() || `PART-${Date.now().toString(36).toUpperCase()}`),
+    .transform((val) => (val && val.trim()) || generateFallbackPartNumber()),
   brandId: z.string().min(1, 'Please select a brand'),
   categoryId: z.string().min(1, 'Please select a category'),
   condition: z.enum(['NEW', 'RECONDITIONED', 'USED']).default('NEW'),
@@ -52,7 +56,60 @@ export const createProductSchema = z.object({
     .optional(),
 });
 
-export const updateProductSchema = createProductSchema.partial();
+export const updateProductSchema = z.object({
+  slug: z.string().min(2).max(191).optional(),
+  partNumber: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val === undefined ? undefined : val.trim() || generateFallbackPartNumber()
+    ),
+  brandId: z.string().min(1, 'Please select a brand').optional(),
+  categoryId: z.string().min(1, 'Please select a category').optional(),
+  condition: z.enum(['NEW', 'RECONDITIONED', 'USED']).optional(),
+  sellingPrice: z.coerce.number().positive('Selling price must be positive').optional(),
+  costPrice: z.coerce.number().min(0, 'Cost price cannot be negative').optional(),
+  stockQty: z.coerce.number().int().min(0, 'Stock cannot be negative').optional(),
+  lowStockThreshold: z.coerce.number().int().min(1, 'Threshold must be at least 1').optional(),
+  weightKg: z.coerce.number().positive().optional(),
+  isActive: z.boolean().optional(),
+  translations: z
+    .array(
+      z.object({
+        language: z.enum(['en', 'si', 'ta']),
+        name: z.string().min(1, 'Product name is required'),
+        description: z.string().default(''),
+      })
+    )
+    .min(1, 'At least one translation is required')
+    .optional(),
+  images: z
+    .array(
+      z.object({
+        imageUrl: z.string().min(1, 'Image URL cannot be empty'),
+        displayOrder: z.coerce.number().default(0),
+        isPrimary: z.boolean().default(false),
+      })
+    )
+    .optional(),
+  compatibilities: z
+    .array(
+      z.object({
+        make: z.string().min(1),
+        model: z.string().min(1),
+        yearFrom: z.coerce.number().int(),
+        yearTo: z.preprocess(
+          (val) => (val === '' || val === undefined ? null : val),
+          z.coerce.number().int().nullable().optional()
+        ),
+        chassisCode: z.preprocess(
+          (val) => (val === '' || val === undefined ? null : val),
+          z.string().nullable().optional()
+        ),
+      })
+    )
+    .optional(),
+});
 
 export const stockAdjustmentSchema = z.object({
   quantityChange: z.coerce.number().int(),

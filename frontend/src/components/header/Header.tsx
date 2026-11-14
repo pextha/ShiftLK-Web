@@ -6,6 +6,8 @@ import { Link, useRouter } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
 import StickySearchBar from './StickySearchBar';
+import ThemeToggle from '@/components/common/ThemeToggle';
+import { useTheme } from '@/lib/theme-context';
 import {
   Menu,
   X,
@@ -26,6 +28,7 @@ export default function Header() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const { theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -36,13 +39,19 @@ export default function Header() {
     }, 200);
     return () => clearTimeout(timer);
   }, [router]);
+
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const { totalItemsCount, setIsCartOpen } = useCart();
 
+  const logoSrc =
+    theme === 'light'
+      ? '/assets/shiftlk-logo-light.png'
+      : '/assets/shiftlk-logo-dark.png';
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#030304]/95 backdrop-blur-md border-b border-[#18181d]">
+    <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-md border-b border-slate-800 transition-colors duration-200">
       {/* Top micro banner */}
-      <div className="bg-[#070709] border-b border-[#18181d] text-xs font-semibold py-1.5 px-4">
+      <div className="bg-slate-900 border-b border-slate-800 text-xs font-semibold py-1.5 px-4 transition-colors duration-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             <span className="bg-[#ccff00] text-black text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-sm shrink-0">
@@ -58,18 +67,18 @@ export default function Header() {
           <div className="flex items-center gap-3 sm:gap-4 text-[11px] font-bold shrink-0">
             <Link
               href="/track-order"
-              className="hidden sm:flex items-center gap-1 text-slate-300 hover:text-[#ccff00] transition-colors whitespace-nowrap"
+              className="hidden sm:flex items-center gap-1 text-slate-300 hover:text-brand-neon transition-colors whitespace-nowrap"
             >
-              <PackageSearch className="w-3.5 h-3.5 text-[#ccff00] shrink-0" />
+              <PackageSearch className="w-3.5 h-3.5 text-brand-neon shrink-0" />
               <span>{t('trackOrder')}</span>
             </Link>
             <a
               href="https://wa.me/94770871018"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[#ccff00] hover:text-white transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 text-brand-neon hover:opacity-80 transition-opacity whitespace-nowrap"
             >
-              <WhatsAppIcon className="w-3.5 h-3.5 text-[#ccff00] shrink-0" />
+              <WhatsAppIcon className="w-3.5 h-3.5 text-brand-neon shrink-0" />
               <span>WhatsApp: 077 087 1018</span>
             </a>
           </div>
@@ -83,16 +92,17 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-2.5 group py-1 shrink-0" aria-label="ShiftLK Spares Home">
             <div className="relative h-9 sm:h-11 flex items-center">
               <Image
-                src="/assets/shiftlk-logo-dark.png"
+                src={logoSrc}
                 alt="ShiftLK Spares - Precious Parts For Every Ride"
                 width={165}
                 height={64}
                 priority
+                unoptimized
                 className="h-9 sm:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               />
             </div>
             <div className="hidden xl:flex flex-col border-l border-slate-800 pl-2.5 shrink-0">
-              <span className="text-[10px] text-[#ccff00] font-black tracking-widest uppercase leading-tight">
+              <span className="text-[10px] text-brand-neon font-black tracking-widest uppercase leading-tight">
                 Polgasowita
               </span>
               <span className="text-[9px] text-slate-400 font-medium leading-tight">
@@ -111,47 +121,47 @@ export default function Header() {
           >
             <Link
               href="/"
-              className="hover:text-[#ccff00] transition-colors shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors shrink-0 whitespace-nowrap"
             >
               <span>{t('home')}</span>
             </Link>
             <Link
               href="/products"
-              className="hover:text-[#ccff00] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
             >
-              <Flame className="w-3.5 h-3.5 text-[#ccff00] shrink-0" />
+              <Flame className="w-3.5 h-3.5 text-brand-neon shrink-0" />
               <span>{t('products')}</span>
             </Link>
             <Link
               href="/track-order"
-              className="hover:text-[#ccff00] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
             >
-              <PackageSearch className="w-3.5 h-3.5 text-[#ccff00] shrink-0" />
+              <PackageSearch className="w-3.5 h-3.5 text-brand-neon shrink-0" />
               <span>{t('trackOrder')}</span>
             </Link>
             <Link
               href="/delivery"
-              className="hover:text-[#ccff00] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
             >
-              <Truck className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#ccff00] shrink-0" />
+              <Truck className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-neon shrink-0" />
               <span>{t('delivery')}</span>
             </Link>
             <Link
               href="/returns"
-              className="hover:text-[#ccff00] transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{t('returns')}</span>
             </Link>
             <Link
               href="/about"
-              className="hover:text-[#ccff00] transition-colors shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors shrink-0 whitespace-nowrap"
             >
               <span>{t('about')}</span>
             </Link>
             <Link
               href="/contact"
-              className="hover:text-[#ccff00] transition-colors shrink-0 whitespace-nowrap"
+              className="hover:text-brand-neon transition-colors shrink-0 whitespace-nowrap"
             >
               <span>{t('contact')}</span>
             </Link>
@@ -162,11 +172,14 @@ export default function Header() {
             {/* Always-visible Language Switcher */}
             <LanguageSwitcher />
 
+            {/* Light / Dark Theme Toggle */}
+            <ThemeToggle />
+
             {/* Shopping Cart Trigger Button */}
             <button
               type="button"
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-slate-300 hover:text-[#ccff00] hover:bg-[#111115] rounded-xl border border-[#1e1e24]/80 hover:border-[#ccff00]/40 transition-colors cursor-pointer shrink-0"
+              className="relative p-2 text-slate-300 hover:text-brand-neon bg-slate-900 hover:bg-slate-850 rounded-xl border border-slate-800 hover:border-brand-neon/50 transition-colors cursor-pointer shrink-0"
               title="Shopping Cart"
               aria-label="Shopping Cart"
             >
@@ -182,7 +195,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setAdminModalOpen(true)}
-              className="p-2 text-slate-400 hover:text-[#ccff00] hover:bg-[#111115] rounded-xl border border-[#1e1e24]/60 hover:border-[#ccff00]/40 transition-colors cursor-pointer shrink-0"
+              className="p-2 text-slate-300 hover:text-brand-neon bg-slate-900 hover:bg-slate-850 rounded-xl border border-slate-800 hover:border-brand-neon/50 transition-colors cursor-pointer shrink-0"
               title="Staff & Admin Portal"
               aria-label="Staff & Admin Portal"
             >
@@ -194,7 +207,7 @@ export default function Header() {
               href="https://wa.me/94770871018"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-black px-3 py-2 rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-95 shrink-0 whitespace-nowrap"
+              className="hidden md:inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-black px-3 py-2 rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-950/20 hover:scale-[1.02] active:scale-95 shrink-0 whitespace-nowrap"
               title="Chat with Spare Parts Specialist"
             >
               <WhatsAppIcon className="w-4 h-4 text-black shrink-0" />
@@ -205,7 +218,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-slate-300 hover:text-white bg-[#111115] border border-[#1e1e24] rounded-xl cursor-pointer shrink-0"
+              className="lg:hidden p-2 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-xl cursor-pointer shrink-0"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -225,64 +238,64 @@ export default function Header() {
 
       {/* Mobile drawer navigation */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-[#18181d] bg-[#030304]/98 backdrop-blur-xl px-4 py-4 space-y-3">
+        <div className="lg:hidden border-t border-slate-800 bg-slate-950/98 backdrop-blur-xl px-4 py-4 space-y-3">
           <div className="flex flex-col space-y-1.5 text-sm font-medium">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon transition-colors"
             >
               {t('home')}
             </Link>
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] flex items-center justify-between transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon flex items-center justify-between transition-colors"
             >
               <span>{t('products')}</span>
-              <span className="text-[10px] font-black bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/30 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-black bg-brand-neon/15 text-brand-neon border border-brand-neon/30 px-2 py-0.5 rounded-full">
                 In Stock
               </span>
             </Link>
             <Link
               href="/track-order"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] flex items-center gap-2 transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon flex items-center gap-2 transition-colors"
             >
-              <PackageSearch className="w-4 h-4 text-[#ccff00]" />
+              <PackageSearch className="w-4 h-4 text-brand-neon" />
               <span>{t('trackOrder')}</span>
             </Link>
             <Link
               href="/delivery"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon transition-colors"
             >
               {t('delivery')} (25 Districts)
             </Link>
             <Link
               href="/returns"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon transition-colors"
             >
               {t('returns')}
             </Link>
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon transition-colors"
             >
               {t('about')}
             </Link>
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-[#111115] text-slate-200 hover:text-[#ccff00] transition-colors"
+              className="p-2.5 rounded-xl hover:bg-slate-900 text-slate-200 hover:text-brand-neon transition-colors"
             >
               {t('contact')}
             </Link>
           </div>
 
-          <div className="pt-2 border-t border-[#18181d] flex flex-col gap-2">
+          <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
             <a
               href="https://wa.me/94770871018"
               target="_blank"
@@ -299,9 +312,9 @@ export default function Header() {
                 setMobileMenuOpen(false);
                 setAdminModalOpen(true);
               }}
-              className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-[#ccff00] py-2 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-brand-neon py-2 transition-colors cursor-pointer"
             >
-              <Shield className="w-3.5 h-3.5 text-[#ccff00]" />
+              <Shield className="w-3.5 h-3.5 text-brand-neon" />
               <span>Staff & Admin Portal</span>
             </button>
           </div>

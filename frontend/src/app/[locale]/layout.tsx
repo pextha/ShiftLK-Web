@@ -14,8 +14,11 @@ import { routing } from '@/i18n/routing';
 import Header from '@/components/header/Header';
 import Footer from '@/components/footer/Footer';
 import FloatingWhatsApp from '@/components/common/FloatingWhatsApp';
+import { Suspense } from 'react';
 import { CartProvider } from '@/lib/cart-context';
+import { ThemeProvider } from '@/lib/theme-context';
 import CartDrawer from '@/components/cart/CartDrawer';
+import LanguageWelcomePopup from '@/components/common/LanguageWelcomePopup';
 import '../globals.css';
 
 const inter = Inter({
@@ -116,7 +119,7 @@ export async function generateMetadata({
       type: 'website',
       images: [
         {
-          url: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80',
+          url: '/assets/shiftlk-logo.png',
           width: 1200,
           height: 630,
           alt: 'ShiftLK Spares Sri Lanka',
@@ -127,9 +130,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: [
-        'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80',
-      ],
+      images: ['/assets/shiftlk-logo.png'],
     },
     icons: {
       icon: [
@@ -164,13 +165,18 @@ export default async function LocaleLayout({
     >
       <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-brand-neon selection:text-black">
         <NextIntlClientProvider messages={messages}>
-          <CartProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <CartDrawer />
-            <FloatingWhatsApp />
-          </CartProvider>
+          <ThemeProvider>
+            <CartProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <CartDrawer />
+              <Suspense fallback={null}>
+                <LanguageWelcomePopup />
+              </Suspense>
+              <FloatingWhatsApp />
+            </CartProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>
