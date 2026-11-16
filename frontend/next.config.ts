@@ -16,7 +16,11 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     rules: {
+      // Only run the Tailwind loader on our own stylesheet. Without this
+      // condition the rule also matches next/font's generated CSS and breaks
+      // the Google Font URLs ("Can't resolve '@vercel/turbopack-next/...'").
       "*.css": {
+        condition: { path: /src\/app\/globals\.css$/ },
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },
