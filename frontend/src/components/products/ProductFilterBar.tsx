@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter, usePathname } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -12,6 +12,7 @@ import {
   Check,
   Search,
   Car,
+  Loader2,
 } from 'lucide-react';
 
 interface CategoryOption {
@@ -55,6 +56,7 @@ export default function ProductFilterBar({
 
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(q);
+  const [isPending, startTransition] = useTransition();
 
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -63,11 +65,15 @@ export default function ProductFilterBar({
     } else {
       params.delete(key);
     }
+    params.delete('page');
     // Reset model if make changes
     if (key === 'make') {
       params.delete('model');
     }
-    router.replace(`${pathname}?${params.toString()}`);
+    const qs = params.toString();
+    startTransition(() => {
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -77,7 +83,9 @@ export default function ProductFilterBar({
 
   const clearAllFilters = () => {
     setSearchInput('');
-    router.replace(pathname);
+    startTransition(() => {
+      router.replace(pathname, { scroll: false });
+    });
     setMobileFilterOpen(false);
   };
 
@@ -96,7 +104,36 @@ export default function ProductFilterBar({
     inStock;
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-3 sm:space-y-4">
+      {/* Mobile Quick Category Horizontal Scroll Pills (1-tap filtering for social media mobile visitors) */}
+      <div className="flex lg:hidden items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        <button
+          type="button"
+          onClick={() => updateParam('category', null)}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all shrink-0 cursor-pointer ${
+            currentCategory === 'all'
+              ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-sm'
+              : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-brand-neon/50'
+          }`}
+        >
+          {t('allCategories')}
+        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat.slug}
+            type="button"
+            onClick={() => updateParam('category', cat.slug)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all shrink-0 cursor-pointer ${
+              currentCategory === cat.slug
+                ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-sm'
+                : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-brand-neon/50'
+            }`}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
       {/* Top Filter Bar / Quick Controls */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Search inside page */}

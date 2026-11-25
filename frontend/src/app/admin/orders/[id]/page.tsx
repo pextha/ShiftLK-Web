@@ -21,9 +21,12 @@ import {
   AlertTriangle,
   Send,
   FileText,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { formatLKR, formatDateTime, cn } from '@/lib/utils';
+import { resolveProductImageUrl } from '@/lib/utils/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +52,7 @@ export default function OrderDetailPage() {
   // Admin Notes
   const [adminNotes, setAdminNotes] = useState('');
   const [editingNotes, setEditingNotes] = useState(false);
+  const [copiedBill, setCopiedBill] = useState(false);
 
   // Fetch Order
   const { data: order, isLoading } = useQuery({
@@ -132,9 +136,56 @@ export default function OrderDetailPage() {
   if (cleanPhone.startsWith('0')) cleanPhone = '94' + cleanPhone.slice(1);
   if (!cleanPhone.startsWith('94') && cleanPhone.length === 9) cleanPhone = '94' + cleanPhone;
 
-  const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-    `Hello ${order.customerName}, this is ShiftLK Spares regarding your order #${order.orderCode}. Current status: ${order.status}.`
-  )}`;
+  const formattedBillText = [
+    '🧾 *SHIFTLK SPARES — OFFICIAL RECEIPT*',
+    '📍 53/1, Palagama Road, Undurugoda, Polgasowita',
+    '📞 Hotline / WhatsApp: 077 087 1018',
+    '----------------------------------------',
+    `*Bill / Order No:* ${order.orderCode}`,
+    `*Date:* ${formatDateTime(order.createdAt)}`,
+    `*Customer:* ${order.customerName}`,
+    ...(order.phone && order.phone !== 'In-Shop Walk-In' ? [`*Phone:* ${order.phone}`] : []),
+    ...(order.secondaryPhone ? [`*Alt Phone:* ${order.secondaryPhone}`] : []),
+    `*Status:* ${order.status}`,
+    '----------------------------------------',
+    '*ITEMS:*',
+    ...(order.items || []).map(
+      (i: any, idx: number) =>
+        `${idx + 1}. *${
+          i.product?.translations?.find((t: any) => t.language === 'en')?.name ||
+          i.productName ||
+          i.product?.slug ||
+          'Spare Part'
+        }* (#${i.product?.partNumber || i.partNumber || ''})\n   ${i.qty} × ${formatLKR(
+          i.unitPrice
+        )} = *${formatLKR(Number(i.unitPrice) * i.qty)}*`
+    ),
+    '----------------------------------------',
+    ...(Number(order.deliveryCost) > 0
+      ? [
+          `Subtotal: ${formatLKR(order.subtotal)}`,
+          `Delivery (${order.district}): ${formatLKR(order.deliveryCost)}`,
+        ]
+      : []),
+    `💳 *TOTAL: ${formatLKR(order.total)}*`,
+    ...(order.trackingNumber ? [`🚚 *Tracking No:* ${order.trackingNumber}`] : []),
+    '----------------------------------------',
+    'Thank you for purchasing from *ShiftLK Spares*! 🏍️⚡',
+  ].join('\n');
+
+  const waUrl =
+    cleanPhone.length >= 11
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(formattedBillText)}`
+      : `https://wa.me/?text=${encodeURIComponent(formattedBillText)}`;
+
+  const handleCopyOrderBill = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(formattedBillText);
+      setCopiedBill(true);
+      success('Bill copied to clipboard!');
+      setTimeout(() => setCopiedBill(false), 2500);
+    }
+  };
 
   // Gross profit calculation
   let totalCogs = 0;
@@ -184,7 +235,7 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <a href={waUrl} target="_blank" rel="noopener noreferrer">
             <Button
               variant="outline"
@@ -192,9 +243,28 @@ export default function OrderDetailPage() {
               className="gap-1.5 text-xs text-emerald-400 border-emerald-900 hover:bg-emerald-950/40"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              WhatsApp Customer
+              Send Bill via WhatsApp
             </Button>
           </a>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyOrderBill}
+            className="gap-1.5 text-xs"
+          >
+            {copiedBill ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">Copied Bill</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Bill</span>
+              </>
+            )}
+          </Button>
 
           <Button
             variant="outline"
@@ -203,7 +273,7 @@ export default function OrderDetailPage() {
             className="gap-1.5 text-xs"
           >
             <Printer className="w-3.5 h-3.5" />
-            Print Slip
+            Print Bill / Slip
           </Button>
         </div>
       </div>
@@ -217,9 +287,11 @@ export default function OrderDetailPage() {
             </span>
             <p className="text-xs text-slate-400 mt-0.5">
               {order.status === 'PENDING' &&
-                'New order received. Confirm to decrement warehouse stock and begin packing.'}
+                (order.stockAllocated
+                  ? 'Bank slip uploaded & stock already deducted. Verify BOC bank statement against the uploaded slip below, then click Confirm Order.'
+                  : 'New order received. Confirm to decrement warehouse stock and begin packing.')}
               {order.status === 'CONFIRMED' &&
-                'Stock is reserved. Hand over to courier and add tracking code.'}
+                'Payment verified & stock allocated. Hand over to courier and add tracking code.'}
               {order.status === 'SHIPPED' &&
                 'Package is with courier. Mark delivered once customer confirms receipt.'}
               {order.status === 'DELIVERED' && 'Order has been delivered and completed.'}
@@ -298,6 +370,11 @@ export default function OrderDetailPage() {
                 <p className="text-xs text-brand-neon font-mono font-bold mt-0.5 print:text-black">
                   {order.phone}
                 </p>
+                {order.secondaryPhone && (
+                  <p className="text-xs text-slate-300 font-mono font-semibold mt-0.5 print:text-black">
+                    Alt: {order.secondaryPhone}
+                  </p>
+                )}
                 <p className="text-xs text-slate-400 mt-2 print:text-gray-600">
                   Preferred language: {order.customerLanguage?.toUpperCase() || 'EN'}
                 </p>
@@ -377,11 +454,93 @@ export default function OrderDetailPage() {
           </Card>
         </div>
 
-        {/* Right Col: Financials & Admin Notes */}
+        {/* Right Col: Bank Slip Verification, Financials & Admin Notes */}
         <div className="space-y-6 print:mt-6">
+          {/* Bank Transfer Slip / PDF Verification Card */}
+          <Card className="print:hidden p-6 space-y-4 border-brand-neon/30">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <FileText className="w-4 h-4 text-brand-neon" />
+                Bank Slip / PDF Verification
+              </h2>
+              {order.stockAllocated && (
+                <Badge variant="success">Stock Deducted</Badge>
+              )}
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Expected Transfer Remark:</span>
+                <span className="font-bold text-brand-neon">
+                  {order.transferRemark || order.customerName}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">BOC Account:</span>
+                <span className="font-mono text-slate-200">89771480 (K P T Premawansha)</span>
+              </div>
+            </div>
+
+            {order.paymentSlipUrl ? (
+              <div className="space-y-3">
+                {order.paymentSlipUrl.toLowerCase().endsWith('.pdf') ? (
+                  <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center text-center gap-3">
+                    <FileText className="w-10 h-10 text-red-400" />
+                    <div>
+                      <p className="text-xs font-bold text-white">PDF Bank Transfer Receipt Uploaded</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Click below to view and verify the customer&apos;s PDF receipt against BOC statement
+                      </p>
+                    </div>
+                    <a
+                      href={resolveProductImageUrl(order.paymentSlipUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-neon text-black font-black text-xs hover:opacity-90 transition-opacity"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Open Full PDF Receipt</span>
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <a
+                      href={resolveProductImageUrl(order.paymentSlipUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-2xl overflow-hidden border border-slate-800 hover:border-brand-neon transition-colors bg-slate-950"
+                      title="Click to open full-size payment slip"
+                    >
+                      <img
+                        src={resolveProductImageUrl(order.paymentSlipUrl)}
+                        alt={`Payment Slip for ${order.orderCode}`}
+                        className="w-full max-h-80 object-contain mx-auto"
+                      />
+                    </a>
+                    <a
+                      href={resolveProductImageUrl(order.paymentSlipUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-brand-neon transition-colors"
+                    >
+                      <span>Open Full-Size Bank Slip in New Tab</span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>No bank transfer slip uploaded for this order.</span>
+              </div>
+            )}
+          </Card>
+
           {/* Order Financials Card */}
           <Card className="p-6 space-y-4 print:border print:border-gray-300 print:p-4">
-            <h2 className="text-base font-bold text-white print:text-black">Payment Summary (COD)</h2>
+            <h2 className="text-base font-bold text-white print:text-black">
+              Payment Summary ({order.paymentSlipUrl ? 'Bank Transfer' : 'Manual'})
+            </h2>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between text-slate-400 print:text-black">

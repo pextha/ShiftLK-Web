@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -14,6 +14,11 @@ import {
   Clock,
   CheckCircle2,
   Lock,
+  Receipt,
+  Users,
+  Rocket,
+  ShieldAlert,
+  Landmark,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -25,20 +30,23 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { apiClient } from '@/lib/api-client';
-import { formatLKR } from '@/lib/utils';
+import { formatLKR, cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/lib/auth-context';
 
+type DashboardPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
+
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [period, setPeriod] = useState<DashboardPeriod>('monthly');
 
-  // Fetch Overview Stats
+  // Fetch Overview Stats for selected period
   const { data: overview, isLoading: overviewLoading } = useQuery({
-    queryKey: ['admin-overview'],
-    queryFn: () => apiClient<any>('/api/v1/admin/analytics/overview'),
+    queryKey: ['admin-overview', period],
+    queryFn: () => apiClient<any>(`/api/v1/admin/analytics/overview?period=${period}`),
   });
 
   // Fetch Sales Timeline (last 30 days)
@@ -60,21 +68,66 @@ export default function DashboardPage() {
   });
 
   const hideProfit = Boolean(overview?.hideProfit);
+  const allocation = overview?.allocation || {
+    distributableProfit: 0,
+    deficit: 0,
+    reinvest50: 0,
+    salaryTotal30: 0,
+    pathumSalary15: 0,
+    sachinSalary15: 0,
+    reserve10: 0,
+    taxBills10: 0,
+  };
+
+  const periodLabel =
+    period === 'daily'
+      ? 'Today (Daily)'
+      : period === 'weekly'
+      ? 'Last 7 Days (Weekly)'
+      : period === 'monthly'
+      ? 'This Month'
+      : 'All-Time';
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Top Banner & Greetings */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Welcome back, <span className="text-brand-neon">{user?.name || 'Admin'}</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Store performance and inventory metrics across Sri Lanka.
+            Daily, weekly & monthly store performance, net profit, and co-founder salary allocation.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Period Switcher: Daily | Weekly | Monthly | All-Time */}
+          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1">
+            {(
+              [
+                { id: 'daily', label: 'Daily' },
+                { id: 'weekly', label: 'Weekly' },
+                { id: 'monthly', label: 'This Month' },
+                { id: 'all', label: 'All-Time' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setPeriod(tab.id)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-xs font-bold transition-colors',
+                  period === tab.id
+                    ? 'bg-brand-neon text-black'
+                    : 'text-slate-400 hover:text-white'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           <Link href="/admin/products/new" prefetch={true}>
             <Button size="sm" className="gap-2 font-bold shadow-lg shadow-brand-neon/20">
               <Plus className="w-4 h-4" />
@@ -84,19 +137,19 @@ export default function DashboardPage() {
           <Link href="/admin/stock">
             <Button size="sm" variant="outline" className="gap-2">
               <Boxes className="w-4 h-4" />
-              Stock Overview
+              Stock
             </Button>
           </Link>
         </div>
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Revenue */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* 1. Sales Revenue */}
         <Card className="p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Total Revenue
+              Sales ({periodLabel})
             </span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <TrendingUp className="w-4 h-4" />
@@ -110,11 +163,13 @@ export default function DashboardPage() {
                 {formatLKR(overview?.revenue || 0)}
               </h2>
             )}
-            <p className="text-[11px] text-slate-400 mt-1">Confirmed & delivered orders</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              From {overview?.totalOrders || 0} confirmed orders
+            </p>
           </div>
         </Card>
 
-        {/* Gross Profit */}
+        {/* 2. Gross Profit & Expenses */}
         <Card className="p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -128,9 +183,7 @@ export default function DashboardPage() {
             {overviewLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : hideProfit ? (
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-slate-500">Admin Only</span>
-              </div>
+              <span className="text-lg font-bold text-slate-500">Admin Only</span>
             ) : (
               <div className="flex items-baseline gap-2">
                 <h2 className="text-2xl font-black text-brand-neon">
@@ -141,13 +194,51 @@ export default function DashboardPage() {
                 </span>
               </div>
             )}
-            <p className="text-[11px] text-slate-400 mt-1">
-              {hideProfit ? 'Profit visibility disabled for staff' : 'Revenue minus COGS'}
+            <p className="text-[11px] text-rose-400 font-semibold mt-1">
+              {hideProfit
+                ? 'Profit visibility disabled for staff'
+                : `Expenses: - ${formatLKR(overview?.totalExpenses || 0)}`}
             </p>
           </div>
         </Card>
 
-        {/* Orders Count & Pending */}
+        {/* 3. Net Profit (ශුද්ධ ලාභය) */}
+        <Card className="p-5 flex flex-col justify-between border-emerald-500/30 bg-emerald-950/10">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+              Net Profit (ශුද්ධ ලාභය)
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              {hideProfit ? <Lock className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
+            </div>
+          </div>
+          <div className="mt-3">
+            {overviewLoading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : hideProfit ? (
+              <span className="text-lg font-bold text-slate-500">Admin Only</span>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <h2
+                  className={cn(
+                    'text-2xl font-black',
+                    (overview?.netProfit || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  )}
+                >
+                  {formatLKR(overview?.netProfit || 0)}
+                </h2>
+                <span className="text-xs font-bold text-slate-400">
+                  ({overview?.netMarginPercent || 0}%)
+                </span>
+              </div>
+            )}
+            <p className="text-[11px] text-slate-300 mt-1">
+              {hideProfit ? 'Hidden for staff' : 'After COGS & all expenses'}
+            </p>
+          </div>
+        </Card>
+
+        {/* 4. Orders Count & Pending */}
         <Card className="p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -173,11 +264,11 @@ export default function DashboardPage() {
                 )}
               </div>
             )}
-            <p className="text-[11px] text-slate-400 mt-1">All processed shipments</p>
+            <p className="text-[11px] text-slate-400 mt-1">Confirmed in {periodLabel}</p>
           </div>
         </Card>
 
-        {/* Low Stock Alerts */}
+        {/* 5. Low Stock Alerts */}
         <Card className="p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -210,6 +301,90 @@ export default function DashboardPage() {
           </div>
         </Card>
       </div>
+
+      {/* Co-Founder Profit Allocation & Partner Salaries Summary Widget (50/30/10/10) */}
+      {!hideProfit && (
+        <Card className="p-6 border-brand-neon/30 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-brand-neon" />
+                <span>Co-Founder Net Profit Split — {periodLabel} (50% / 30% / 10% / 10%)</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Pure Net Profit ({formatLKR(overview?.netProfit || 0)}) split between Reinvestment, Co-Founder Salaries, Emergency Reserve & Tax/Bills.
+              </p>
+            </div>
+            <Link href="/admin/reports">
+              <Button variant="ghost" size="sm" className="text-xs text-brand-neon hover:text-brand-neon gap-1">
+                Full Breakdown Table <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* 50% Reinvest */}
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-brand-neon/30 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-bold text-brand-neon">
+                <span>50% Reinvest</span>
+                <Rocket className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-lg font-black text-white font-mono">
+                {formatLKR(allocation.reinvest50)}
+              </div>
+              <p className="text-[10px] text-slate-400">Stock, Marketing & Growth</p>
+            </div>
+
+            {/* 15% Pathum Theekshana */}
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-emerald-500/40 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400">
+                <span>15% Partner Salary</span>
+                <Users className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-lg font-black text-emerald-400 font-mono">
+                {formatLKR(allocation.pathumSalary15)}
+              </div>
+              <p className="text-[11px] font-bold text-white">Pathum Theekshana</p>
+            </div>
+
+            {/* 15% Sachin Jayangana */}
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-cyan-500/40 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-bold text-cyan-400">
+                <span>15% Partner Salary</span>
+                <Users className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-lg font-black text-cyan-400 font-mono">
+                {formatLKR(allocation.sachinSalary15)}
+              </div>
+              <p className="text-[11px] font-bold text-white">Sachin Jayangana</p>
+            </div>
+
+            {/* 10% Emergency Reserve */}
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-bold text-amber-400">
+                <span>10% Emergency Fund</span>
+                <ShieldAlert className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-lg font-black text-amber-400 font-mono">
+                {formatLKR(allocation.reserve10)}
+              </div>
+              <p className="text-[10px] text-slate-400">Reserve / Emergency</p>
+            </div>
+
+            {/* 10% Tax / Bills Reserve */}
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-bold text-purple-400">
+                <span>10% Tax / Bills</span>
+                <Landmark className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-lg font-black text-purple-400 font-mono">
+                {formatLKR(allocation.taxBills10)}
+              </div>
+              <p className="text-[10px] text-slate-400">Tax & Utility Reserve</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Revenue Chart (30 Days) */}
       <Card className="p-6">
@@ -399,7 +574,7 @@ export default function DashboardPage() {
                   No sales recorded yet
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Top selling products will appear here once orders are confirmed.
+                  Confirmed orders will populate top product metrics.
                 </p>
               </div>
             )}

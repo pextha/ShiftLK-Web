@@ -112,7 +112,25 @@ export const updateProductSchema = z.object({
 });
 
 export const stockAdjustmentSchema = z.object({
-  quantityChange: z.coerce.number().int(),
+  quantityChange: z.coerce.number().int().min(-100000).max(100000),
   reason: z.enum(['RESTOCK', 'DAMAGE', 'RETURN', 'AUDIT_CORRECTION', 'OTHER']),
   note: z.string().max(300).optional(),
+});
+
+export const restockProductSchema = z.object({
+  quantity: z.coerce.number().int().min(1, 'Restock quantity must be at least 1').max(100000),
+  newCostPrice: z.coerce.number().min(0, 'Cost price cannot be negative').max(10000000).optional().nullable(),
+  note: z.string().max(300).optional(),
+});
+
+export const inlineStockSchema = z.object({
+  newQty: z.coerce.number().int().min(0).max(1000000).optional(),
+  delta: z.coerce.number().int().min(-100000).max(100000).optional(),
+  note: z.string().max(300).optional(),
+});
+
+export const bulkProductsSchema = z.object({
+  action: z.enum(['ACTIVATE', 'DEACTIVATE', 'UPDATE_STOCK']),
+  productIds: z.array(z.string().min(1).max(100)).min(1).max(500),
+  stockAdjustment: z.coerce.number().int().min(-100000).max(100000).optional(),
 });

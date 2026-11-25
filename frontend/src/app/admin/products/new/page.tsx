@@ -999,19 +999,61 @@ export default function NewProductPage() {
               </p>
             </div>
 
-            <div>
-              <Input
-                label="Shipping Weight (kg)"
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-300">
+                  Packed Weight (Packing සමඟ බර - kg) *
+                </label>
+                <span className="text-[11px] font-mono text-brand-neon">
+                  {Math.round((Number(weightKg) || 0) * 1000)} g
+                </span>
+              </div>
+              <input
                 type="number"
-                step="0.05"
-                min="0.05"
+                step="0.01"
+                min="0.01"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
                 required
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-neon focus:ring-1 focus:ring-brand-neon transition-all font-mono"
               />
-              <p className="text-[10px] text-slate-400 mt-1">
-                Used to calculate courier fees (First 1kg = Rs. 425, +Rs. 100/kg extra; Stickers &le; 0.25kg = Rs. 220).
-              </p>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {[
+                  { label: '250g (0.25kg)', val: '0.25' },
+                  { label: '500g (0.5kg)', val: '0.5' },
+                  { label: '1.0 kg', val: '1.0' },
+                  { label: '1.5 kg', val: '1.5' },
+                  { label: '2.0 kg', val: '2.0' },
+                  { label: '3.0 kg', val: '3.0' },
+                ].map((preset) => (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => setWeightKg(preset.val)}
+                    className={cn(
+                      'px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer',
+                      Number(weightKg) === Number(preset.val)
+                        ? 'bg-brand-neon text-black border-brand-neon'
+                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                    )}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Est. Courier Fee (1 unit, packed):</span>
+                  <span className="font-mono font-bold text-brand-neon">
+                    {formatLKR(
+                      425 + Math.max(0, Math.ceil((Number(weightKg) || 1) - 1.0)) * 100
+                    )}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  Enter weight including box/packing. Delivery fee scales automatically by packed weight + selected district rate (1st kg = District Base Fee, +Extra per additional kg).
+                </p>
+              </div>
             </div>
 
             <div className="pt-2 border-t border-slate-800">

@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Package,
   Boxes,
   ShoppingBag,
+  Store,
   TrendingUp,
   Receipt,
   Settings,
@@ -25,6 +26,7 @@ const navigationItems = [
   { name: 'Categories', href: '/admin/categories', icon: Layers },
   { name: 'Brands', href: '/admin/brands', icon: Award },
   { name: 'Stock Overview', href: '/admin/stock', icon: Boxes },
+  { name: 'In-Shop POS / Bill', href: '/admin/pos', icon: Store },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
   { name: 'Reports & Profit', href: '/admin/reports', icon: TrendingUp },
   { name: 'Expenses', href: '/admin/expenses', icon: Receipt },
@@ -44,19 +46,7 @@ export function AdminSidebar({
   setMobileOpen,
 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user } = useAuth();
-
-  // Warm up and prefetch all admin routes in the background so clicks are instant
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      navigationItems.forEach((item) => {
-        router.prefetch(item.href);
-      });
-      router.prefetch('/admin/products/new');
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [router]);
 
   return (
     <>

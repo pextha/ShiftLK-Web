@@ -1,4 +1,24 @@
 import { normalizeStoredImageUrl } from '../lib/r2';
+import { prisma } from '../lib/prisma';
+
+export async function shouldHideProfitForUser(userRole?: string): Promise<boolean> {
+  if (userRole !== 'STAFF') return false;
+  const setting = await prisma.systemSetting.findUnique({
+    where: { id: 'default' },
+  });
+  return Boolean(setting?.hideProfitFromStaff);
+}
+
+/**
+ * Escapes a value for CSV output and neutralizes spreadsheet formula injection (=, +, -, @, \t, \r)
+ */
+export function csvCell(v: unknown): string {
+  let s = String(v ?? '');
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = `'${s}`;
+  }
+  return `"${s.replace(/"/g, '""')}"`;
+}
 
 export interface PublicProductDto {
   id: string;
@@ -131,6 +151,7 @@ export function toPublicOrderDto(order: any) {
     orderCode: order.orderCode,
     customerName: order.customerName,
     phone: order.phone,
+    secondaryPhone: order.secondaryPhone || null,
     address: order.address,
     district: order.district,
     deliveryCost: Number(order.deliveryCost),

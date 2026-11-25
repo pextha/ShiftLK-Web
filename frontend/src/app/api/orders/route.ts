@@ -27,9 +27,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     console.error('Order creation API error:', err);
-    const message = err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json(
-      { error: message },
+      { error: 'Unable to process order at this time. Please try again.' },
       { status: 500 }
     );
   }

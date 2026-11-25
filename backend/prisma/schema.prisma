@@ -128,6 +128,7 @@ model Product {
   compatibilities VehicleCompatibility[]
   orderItems      OrderItem[]
   stockMovements  StockMovement[]
+  stockReservations StockReservation[]
 
   @@index([slug])
   @@index([categoryId])
@@ -202,6 +203,7 @@ model Order {
   orderCode        String      @unique @map("order_code") @db.VarChar(50)
   customerName     String      @map("customer_name") @db.VarChar(255)
   phone            String      @db.VarChar(30)
+  secondaryPhone   String?     @map("secondary_phone") @db.VarChar(30)
   address          String      @db.Text
   district         String      @db.VarChar(100)
   deliveryCost     Decimal     @map("delivery_cost") @db.Decimal(10, 2)
@@ -212,6 +214,9 @@ model Order {
   notes            String?     @db.Text
   adminNotes       String?     @map("admin_notes") @db.Text
   trackingNumber   String?     @map("tracking_number") @db.VarChar(100)
+  paymentSlipUrl   String?     @map("payment_slip_url") @db.VarChar(1000)
+  transferRemark   String?     @map("transfer_remark") @db.VarChar(255)
+  stockAllocated   Boolean     @default(false) @map("stock_allocated")
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
@@ -300,11 +305,32 @@ model StockMovement {
   @@map("stock_movements")
 }
 
+model StockReservation {
+  id            String   @id @default(cuid())
+  productId     String   @map("product_id")
+  qty           Int
+  status        String   @default("ACTIVE") @db.VarChar(20) // ACTIVE, CONSUMED, RELEASED, EXPIRED
+  extendedCount Int      @default(0) @map("extended_count")
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([status, expiresAt])
+  @@map("stock_reservations")
+}
+
 model SystemSetting {
   id                  String   @id @default("default") @db.VarChar(50)
   defaultLowStockAlert Int      @default(5) @map("default_low_stock_alert")
   whatsappNumber      String   @default("+94771234567") @map("whatsapp_number") @db.VarChar(50)
   hideProfitFromStaff Boolean  @default(false) @map("hide_profit_from_staff")
+  bankName            String   @default("BOC (Bank of Ceylon)") @map("bank_name") @db.VarChar(150)
+  bankAccountName     String   @default("K P T Premawansha") @map("bank_account_name") @db.VarChar(191)
+  bankAccountNumber   String   @default("89771480") @map("bank_account_number") @db.VarChar(100)
+  bankBranch          String   @default("Kesbawa") @map("bank_branch") @db.VarChar(150)
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@map("system_settings")

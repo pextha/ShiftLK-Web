@@ -7,7 +7,7 @@ import * as expensesController from './expenses.controller';
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole(['SUPER_ADMIN', 'ADMIN']));
+router.use(requireRole(['ADMIN']));
 
 router.get('/', expensesController.getExpenses);
 router.post('/', validateBody(createExpenseSchema), expensesController.createExpense);

@@ -94,11 +94,11 @@ export default function HeroVideoAmbience() {
             }`}
           />
 
-          {/* Wide soft feathering gradients on all 4 edges so no rectangular border is visible */}
-          <div className="absolute inset-y-0 right-0 w-36 sm:w-52 md:w-72 bg-gradient-to-r from-transparent via-slate-950/80 to-slate-950" />
-          <div className="absolute inset-y-0 left-0 w-24 sm:w-36 md:w-48 bg-gradient-to-r from-slate-950 via-slate-950/65 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-36 sm:h-44 bg-gradient-to-b from-slate-950 via-slate-950/75 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-40 sm:h-48 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+          {/* Wide soft feathering gradients on all 4 edges (scaled for mobile so videos stay visible) */}
+          <div className="absolute inset-y-0 right-0 w-14 sm:w-44 md:w-72 bg-gradient-to-r from-transparent via-slate-950/75 to-slate-950" />
+          <div className="absolute inset-y-0 left-0 w-8 sm:w-28 md:w-48 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-24 sm:h-40 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-28 sm:h-44 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         </div>
 
         {/* ====================================================
@@ -122,18 +122,18 @@ export default function HeroVideoAmbience() {
             }`}
           />
 
-          {/* Wide soft feathering gradients on all 4 edges so no rectangular border is visible */}
-          <div className="absolute inset-y-0 left-0 w-36 sm:w-52 md:w-72 bg-gradient-to-l from-transparent via-slate-950/80 to-slate-950" />
-          <div className="absolute inset-y-0 right-0 w-24 sm:w-36 md:w-48 bg-gradient-to-l from-slate-950 via-slate-950/65 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-36 sm:h-44 bg-gradient-to-b from-slate-950 via-slate-950/75 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-40 sm:h-48 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+          {/* Wide soft feathering gradients on all 4 edges (scaled for mobile so videos stay visible) */}
+          <div className="absolute inset-y-0 left-0 w-14 sm:w-44 md:w-72 bg-gradient-to-l from-transparent via-slate-950/75 to-slate-950" />
+          <div className="absolute inset-y-0 right-0 w-8 sm:w-28 md:w-48 bg-gradient-to-l from-slate-950 via-slate-950/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-24 sm:h-40 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-28 sm:h-44 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         </div>
       </div>
 
       {/* ========================================================
           CENTER SEAM & VERTICAL DIVIDER GRADIENT
          ======================================================== */}
-      <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-56 sm:w-80 md:w-[520px] pointer-events-none flex items-center justify-center">
+      <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-28 sm:w-72 md:w-[500px] pointer-events-none flex items-center justify-center">
         <div className="w-full h-full bg-gradient-to-r from-transparent via-slate-950/95 to-transparent" />
         <div className="absolute inset-y-10 w-px bg-gradient-to-b from-transparent via-brand-neon/35 to-transparent opacity-70" />
       </div>

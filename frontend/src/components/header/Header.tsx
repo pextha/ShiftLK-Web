@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
-import { Link, useRouter } from '@/i18n/routing';
+import { Link } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
 import StickySearchBar from './StickySearchBar';
@@ -16,32 +16,18 @@ import {
   Flame,
   Shield,
   PackageSearch,
-  ShoppingCart,
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import AdminLoginModal from './AdminLoginModal';
-import { useCart } from '@/lib/cart-context';
 
 export default function Header() {
   const locale = useLocale();
   const isIndic = locale === 'si' || locale === 'ta';
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
-  const router = useRouter();
   const { theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      ['/products', '/track-order', '/delivery', '/returns', '/about', '/contact'].forEach((path) => {
-        router.prefetch(path);
-      });
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [router]);
-
   const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const { totalItemsCount, setIsCartOpen } = useCart();
 
   const logoSrc =
     theme === 'light'
@@ -86,11 +72,11 @@ export default function Header() {
       </div>
 
       {/* Main navigation header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
-        <div className="flex items-center justify-between gap-2 xl:gap-4">
-          {/* Brand Logo with Polgasowita Badge (always shown across EN, SI, TA on desktop) */}
-          <Link href="/" className="flex items-center gap-2.5 group py-1 shrink-0" aria-label="ShiftLK Spares Home">
-            <div className="relative h-9 sm:h-11 flex items-center">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2 xl:gap-4">
+          {/* Brand Logo with Polgasowita Badge */}
+          <Link href="/" className="flex items-center gap-2 group py-0.5 shrink-0" aria-label="ShiftLK Spares Home">
+            <div className="relative h-8 sm:h-11 flex items-center">
               <Image
                 src={logoSrc}
                 alt="ShiftLK Spares - Precious Parts For Every Ride"
@@ -98,7 +84,7 @@ export default function Header() {
                 height={64}
                 priority
                 unoptimized
-                className="h-9 sm:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                className="h-8 sm:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               />
             </div>
             <div className="hidden xl:flex flex-col border-l border-slate-800 pl-2.5 shrink-0">
@@ -175,27 +161,11 @@ export default function Header() {
             {/* Light / Dark Theme Toggle */}
             <ThemeToggle />
 
-            {/* Shopping Cart Trigger Button */}
-            <button
-              type="button"
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-slate-300 hover:text-brand-neon bg-slate-900 hover:bg-slate-850 rounded-xl border border-slate-800 hover:border-brand-neon/50 transition-colors cursor-pointer shrink-0"
-              title="Shopping Cart"
-              aria-label="Shopping Cart"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              {totalItemsCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ccff00] text-black text-[10px] font-black flex items-center justify-center shadow-md">
-                  {totalItemsCount}
-                </span>
-              )}
-            </button>
-
-            {/* Subtle Staff / Admin Portal Entry Icon */}
+            {/* Subtle Staff / Admin Portal Entry Icon (Desktop/Tablet; on mobile it lives in the menu drawer) */}
             <button
               type="button"
               onClick={() => setAdminModalOpen(true)}
-              className="p-2 text-slate-300 hover:text-brand-neon bg-slate-900 hover:bg-slate-850 rounded-xl border border-slate-800 hover:border-brand-neon/50 transition-colors cursor-pointer shrink-0"
+              className="hidden sm:inline-flex p-2 text-slate-300 hover:text-brand-neon bg-slate-900 hover:bg-slate-850 rounded-xl border border-slate-800 hover:border-brand-neon/50 transition-colors cursor-pointer shrink-0"
               title="Staff & Admin Portal"
               aria-label="Staff & Admin Portal"
             >

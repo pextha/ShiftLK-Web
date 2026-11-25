@@ -65,6 +65,7 @@ export interface GetProductsParams {
 export interface CreateOrderPayload {
   customerName: string;
   phone: string;
+  secondaryPhone?: string;
   address: string;
   district: string;
   items: Array<{
@@ -73,6 +74,9 @@ export interface CreateOrderPayload {
   }>;
   notes?: string;
   locale?: AppLocale;
+  reservationId?: string;
+  paymentSlipUrl?: string;
+  transferRemark?: string;
   _hp?: string;
 }
 
@@ -104,10 +108,20 @@ export class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     const isGet = !options.method || options.method.toUpperCase() === 'GET';
+    const isStaticLookup =
+      isGet &&
+      (endpoint.startsWith('/categories') ||
+        endpoint.startsWith('/brands') ||
+        endpoint.startsWith('/delivery-zones'));
 
     try {
       const res = await fetch(url, {
-        ...(isGet && !options.cache ? { next: { revalidate: 15 } } : {}),
+        ...(isGet && !options.cache
+          ? { next: { revalidate: isStaticLookup ? 60 : 20 } }
+          : {}),
+        ...(isGet && !options.signal && typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+          ? { signal: AbortSignal.timeout(3500) }
+          : {}),
         ...options,
         headers: {
           'Content-Type': 'application/json',

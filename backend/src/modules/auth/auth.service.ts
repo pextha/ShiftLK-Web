@@ -3,7 +3,12 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
 import { env } from '../../config/env';
 import { AppError } from '../../middlewares/errorHandler';
-import { AuthUserPayload } from '../../middlewares/auth';
+import {
+  AuthUserPayload,
+  getUserTokenVersion,
+  bumpUserTokenVersion,
+  isTokenRevoked,
+} from '../../middlewares/auth';
 
 interface LockoutEntry {
   attempts: number;
@@ -11,6 +16,7 @@ interface LockoutEntry {
 }
 
 const lockoutStore = new Map<string, LockoutEntry>();
+const accountLockoutStore = new Map<string, LockoutEntry>();
 // Dummy hash to prevent timing attacks when email does not exist
 const DUMMY_HASH = '$2b$10$abcdefghijklmnopqrstuuabcdefghijklmnopqrstuuabcdefghijk';
 
@@ -19,14 +25,26 @@ export class AuthService {
     const normalizedEmail = email.toLowerCase().trim();
     const cleanIp = (clientIp || '127.0.0.1').replace(/^::ffff:/, '').trim();
     const lockoutKey = `${cleanIp}:${normalizedEmail}`;
+    const accountKey = `acct:${normalizedEmail}`;
     const now = Date.now();
+
     const entry = lockoutStore.get(lockoutKey);
+    const acctEntry = accountLockoutStore.get(accountKey);
 
     if (entry && entry.lockedUntil && entry.lockedUntil > now) {
       const remainingMinutes = Math.ceil((entry.lockedUntil - now) / (60 * 1000));
       throw new AppError(
         'ACCOUNT_LOCKED',
         `Too many failed attempts from this device. Please try again in ${remainingMinutes} minute(s).`,
+        429
+      );
+    }
+
+    if (acctEntry && acctEntry.lockedUntil && acctEntry.lockedUntil > now) {
+      const remainingMinutes = Math.ceil((acctEntry.lockedUntil - now) / (60 * 1000));
+      throw new AppError(
+        'ACCOUNT_LOCKED',
+        `Account temporarily locked due to excessive failed login attempts. Please try again in ${remainingMinutes} minute(s).`,
         429
       );
     }
@@ -45,10 +63,17 @@ export class AuthService {
       if (currentAttempts >= env.LOCKOUT_MAX_ATTEMPTS) {
         lockedUntil = now + env.LOCKOUT_MINUTES * 60 * 1000;
       }
-
       lockoutStore.set(lockoutKey, { attempts: currentAttempts, lockedUntil });
 
-      if (lockedUntil) {
+      // Global per-account counter (locks account after 10 failures across any IPs)
+      const acctAttempts = (acctEntry?.attempts || 0) + 1;
+      const acctLockedUntil =
+        acctAttempts >= env.LOCKOUT_MAX_ATTEMPTS * 2
+          ? now + env.LOCKOUT_MINUTES * 60 * 1000
+          : undefined;
+      accountLockoutStore.set(accountKey, { attempts: acctAttempts, lockedUntil: acctLockedUntil });
+
+      if (lockedUntil || acctLockedUntil) {
         throw new AppError(
           'ACCOUNT_LOCKED',
           `Too many failed attempts. Access from this device is temporarily locked for ${env.LOCKOUT_MINUTES} minutes.`,
@@ -59,21 +84,24 @@ export class AuthService {
       throw new AppError('INVALID_CREDENTIALS', 'Invalid email or password', 401);
     }
 
-    // Reset lockout entry on successful authentication
+    // Reset lockout entries on successful authentication
     lockoutStore.delete(lockoutKey);
+    accountLockoutStore.delete(accountKey);
 
+    const tv = getUserTokenVersion(user.id);
     const payload: AuthUserPayload = {
       id: user.id,
       email: user.email,
-      role: user.role as any,
+      role: user.role as 'ADMIN' | 'STAFF',
       name: user.name,
+      tv,
     };
 
     const accessToken = jwt.sign(payload, env.JWT_SECRET, {
       expiresIn: env.JWT_ACCESS_EXPIRES_IN as any,
     });
 
-    const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, {
+    const refreshToken = jwt.sign({ id: user.id, tv }, env.JWT_REFRESH_SECRET, {
       expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
     });
 
@@ -86,7 +114,18 @@ export class AuthService {
 
   async refreshToken(refreshTokenString: string) {
     try {
-      const decoded = jwt.verify(refreshTokenString, env.JWT_REFRESH_SECRET) as { id: string };
+      if (isTokenRevoked(refreshTokenString)) {
+        throw new AppError('INVALID_REFRESH_TOKEN', 'Refresh token has been revoked', 401);
+      }
+
+      const decoded = jwt.verify(refreshTokenString, env.JWT_REFRESH_SECRET) as {
+        id: string;
+        tv?: number;
+      };
+
+      if (decoded.tv !== undefined && decoded.tv < getUserTokenVersion(decoded.id)) {
+        throw new AppError('INVALID_REFRESH_TOKEN', 'Refresh token has been invalidated', 401);
+      }
 
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
@@ -96,20 +135,27 @@ export class AuthService {
         throw new AppError('USER_INACTIVE', 'User account is no longer active or permitted', 401);
       }
 
+      const tv = getUserTokenVersion(user.id);
       const payload: AuthUserPayload = {
         id: user.id,
         email: user.email,
-        role: user.role as any,
+        role: user.role as 'ADMIN' | 'STAFF',
         name: user.name,
+        tv,
       };
 
       const accessToken = jwt.sign(payload, env.JWT_SECRET, {
         expiresIn: env.JWT_ACCESS_EXPIRES_IN as any,
       });
 
+      const refreshToken = jwt.sign({ id: user.id, tv }, env.JWT_REFRESH_SECRET, {
+        expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
+      });
+
       return {
         user: payload,
         accessToken,
+        refreshToken,
       };
     } catch (err: any) {
       if (err instanceof AppError) throw err;
@@ -136,6 +182,9 @@ export class AuthService {
       where: { id: userId },
       data: { passwordHash: newHash },
     });
+
+    // Invalidate all prior tokens for this user
+    bumpUserTokenVersion(userId);
 
     return { message: 'Password successfully updated' };
   }
@@ -164,10 +213,12 @@ export class AuthService {
     const normalizedEmail = email.toLowerCase().trim();
     const cleanIp = (clientIp || '127.0.0.1').replace(/^::ffff:/, '').trim();
     lockoutStore.delete(`${cleanIp}:${normalizedEmail}`);
+    accountLockoutStore.delete(`acct:${normalizedEmail}`);
   }
 
   clearAllLockouts() {
     lockoutStore.clear();
+    accountLockoutStore.clear();
   }
 }
 

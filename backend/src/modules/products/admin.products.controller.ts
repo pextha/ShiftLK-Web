@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../middlewares/errorHandler';
 import { auditService } from '../audit/audit.service';
+import { shouldHideProfitForUser, csvCell } from '../../utils/serializers';
 
 export async function getAdminProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -27,7 +28,7 @@ export async function getAdminProducts(req: Request, res: Response, next: NextFu
       where.condition = condition.toUpperCase();
     }
 
-    const [total, products] = await Promise.all([
+    const [total, products, hideProfit] = await Promise.all([
       prisma.product.count({ where }),
       prisma.product.findMany({
         where,
@@ -42,6 +43,7 @@ export async function getAdminProducts(req: Request, res: Response, next: NextFu
           compatibilities: true,
         },
       }),
+      shouldHideProfitForUser(req.user?.role),
     ]);
 
     const items = products.map((p) => {
@@ -57,8 +59,8 @@ export async function getAdminProducts(req: Request, res: Response, next: NextFu
         brand: p.brand,
         condition: p.condition,
         sellingPrice: selling,
-        costPrice: cost,
-        profitMarginPercent: Math.round(margin * 10) / 10,
+        costPrice: hideProfit ? 0 : cost,
+        profitMarginPercent: hideProfit ? 0 : Math.round(margin * 10) / 10,
         stockQty: p.stockQty,
         lowStockThreshold: p.lowStockThreshold ?? 5,
         weightKg: Number(p.weightKg),
@@ -358,16 +360,19 @@ export async function deleteProduct(req: Request, res: Response, next: NextFunct
 export async function getAdminProductById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        brand: true,
-        translations: true,
-        images: { orderBy: { displayOrder: 'asc' } },
-        compatibilities: true,
-      },
-    });
+    const [product, hideProfit] = await Promise.all([
+      prisma.product.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          brand: true,
+          translations: true,
+          images: { orderBy: { displayOrder: 'asc' } },
+          compatibilities: true,
+        },
+      }),
+      shouldHideProfitForUser(req.user?.role),
+    ]);
 
     if (!product) {
       throw new AppError('PRODUCT_NOT_FOUND', 'Product not found', 404);
@@ -381,9 +386,9 @@ export async function getAdminProductById(req: Request, res: Response, next: Nex
       data: {
         ...product,
         sellingPrice: selling,
-        costPrice: cost,
-        profitMarginPercent: Math.round(margin * 10) / 10,
-        profitPerUnit: Math.round((selling - cost) * 100) / 100,
+        costPrice: hideProfit ? 0 : cost,
+        profitMarginPercent: hideProfit ? 0 : Math.round(margin * 10) / 10,
+        profitPerUnit: hideProfit ? 0 : Math.round((selling - cost) * 100) / 100,
         weightKg: Number(product.weightKg),
       },
     });
@@ -394,16 +399,19 @@ export async function getAdminProductById(req: Request, res: Response, next: Nex
 
 export async function getStockOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        costPrice: true,
-        sellingPrice: true,
-        stockQty: true,
-        lowStockThreshold: true,
-      },
-    });
+    const [products, hideProfit] = await Promise.all([
+      prisma.product.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          costPrice: true,
+          sellingPrice: true,
+          stockQty: true,
+          lowStockThreshold: true,
+        },
+      }),
+      shouldHideProfitForUser(req.user?.role),
+    ]);
 
     let totalProducts = products.length;
     let totalUnits = 0;
@@ -432,9 +440,9 @@ export async function getStockOverview(req: Request, res: Response, next: NextFu
       data: {
         totalProducts,
         totalUnits,
-        totalStockValueAtCost: Math.round(totalStockValueAtCost),
+        totalStockValueAtCost: hideProfit ? 0 : Math.round(totalStockValueAtCost),
         totalStockValueAtSelling: Math.round(totalStockValueAtSelling),
-        expectedProfitIfAllSold: Math.round(expectedProfitIfAllSold),
+        expectedProfitIfAllSold: hideProfit ? 0 : Math.round(expectedProfitIfAllSold),
         outOfStockCount,
         lowStockCount,
       },
@@ -533,11 +541,13 @@ export async function restockProduct(req: Request, res: Response, next: NextFunc
       return product;
     });
 
+    const hideProfit = await shouldHideProfitForUser(req.user?.role);
+
     res.json({
       data: {
         id,
         currentStock: updated.stockQty,
-        costPrice: Number(updated.costPrice),
+        costPrice: hideProfit ? 0 : Number(updated.costPrice),
         message: 'Product successfully restocked',
       },
     });
@@ -669,22 +679,40 @@ export async function bulkProductsAction(req: Request, res: Response, next: Next
 
 export async function exportProductsCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const products = await prisma.product.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        category: { select: { slug: true } },
-        brand: { select: { name: true } },
-        translations: { where: { language: 'en' }, select: { name: true } },
-      },
-    });
+    const [products, hideProfit] = await Promise.all([
+      prisma.product.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: {
+          category: { select: { slug: true } },
+          brand: { select: { name: true } },
+          translations: { where: { language: 'en' }, select: { name: true } },
+        },
+      }),
+      shouldHideProfitForUser(req.user?.role),
+    ]);
 
-    const header = 'id,slug,partNumber,brand,category,condition,sellingPrice,costPrice,stockQty,lowStockThreshold,isActive,name_en\n';
+    const header =
+      'id,slug,partNumber,brand,category,condition,sellingPrice,costPrice,stockQty,lowStockThreshold,isActive,name_en\n';
     const rows = products.map((p) => {
-      const name = (p.translations[0]?.name || '').replace(/"/g, '""');
-      return `"${p.id}","${p.slug}","${p.partNumber}","${p.brand.name}","${p.category.slug}","${p.condition}",${p.sellingPrice},${p.costPrice},${p.stockQty},${p.lowStockThreshold},${p.isActive},"${name}"`;
+      const name = p.translations[0]?.name || '';
+      const costVal = hideProfit ? 0 : Number(p.costPrice);
+      return [
+        csvCell(p.id),
+        csvCell(p.slug),
+        csvCell(p.partNumber),
+        csvCell(p.brand.name),
+        csvCell(p.category.slug),
+        csvCell(p.condition),
+        Number(p.sellingPrice),
+        costVal,
+        p.stockQty,
+        p.lowStockThreshold,
+        p.isActive,
+        csvCell(name),
+      ].join(',');
     });
 
-    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="products_export.csv"');
     res.send(header + rows.join('\n'));
   } catch (error) {

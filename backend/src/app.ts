@@ -31,15 +31,22 @@ import uploadsRoutes from './modules/uploads/uploads.routes';
 
 const app = express();
 
+// Trust first reverse proxy hop (Cloudflare / Nginx / Next.js proxy)
+app.set('trust proxy', 1);
+
 // Security & headers
-app.use(helmet({
-  contentSecurityPolicy: false, // Allows Swagger UI assets
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: env.NODE_ENV === 'production' ? undefined : false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 const allowedOrigins = [
   env.FRONTEND_ORIGIN,
   env.ADMIN_ORIGIN,
+  'https://shiftlk.lk',
+  'https://www.shiftlk.lk',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
@@ -55,12 +62,6 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      try {
-        const url = new URL(origin);
-        if (url.hostname === 'shiftlk.lk' || url.hostname.endsWith('.shiftlk.lk')) {
-          return callback(null, true);
-        }
-      } catch {}
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
@@ -69,10 +70,11 @@ app.use(
   })
 );
 
-// Logging
+// Logging (redact sensitive auth cookies and headers)
 if (env.NODE_ENV !== 'test') {
   app.use(
     pinoHttp({
+      redact: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]'],
       autoLogging: {
         ignore: (req) => req.url === '/health' || req.url?.startsWith('/api/docs'),
       },
@@ -80,9 +82,9 @@ if (env.NODE_ENV !== 'test') {
   );
 }
 
-// Request parsers
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Request parsers (capped at 250kb to prevent memory exhaustion; file uploads use multer)
+app.use(express.json({ limit: '250kb' }));
+app.use(express.urlencoded({ extended: true, limit: '250kb' }));
 app.use(cookieParser());
 
 // Rate limiter for API
@@ -97,8 +99,10 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Swagger Documentation
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger Documentation (disabled in production to avoid exposing admin API surface)
+if (env.NODE_ENV !== 'production') {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 // API v1 Public Routes
 app.use('/api/v1/products', productsRoutes);

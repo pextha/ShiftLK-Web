@@ -18,6 +18,8 @@ import {
   RefreshCw,
   ExternalLink,
   MessageCircle,
+  Store,
+  Plus,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { formatLKR, formatDateTime, cn } from '@/lib/utils';
@@ -103,15 +105,27 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          className="gap-2 text-xs"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Link href="/admin/pos">
+            <Button
+              size="sm"
+              className="gap-1.5 text-xs font-black bg-brand-neon text-black hover:bg-brand-neon/90 shadow-lg shadow-brand-neon/15"
+            >
+              <Store className="w-3.5 h-3.5" />
+              + In-Shop Sale (POS Bill)
+            </Button>
+          </Link>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="gap-2 text-xs"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -257,6 +271,23 @@ export default function OrdersPage() {
                             <MessageCircle className="w-3.5 h-3.5" />
                           </a>
                         </div>
+                        {o.secondaryPhone && (
+                          <div className="text-[10.5px] text-slate-400 font-mono mt-0.5">
+                            Alt: {o.secondaryPhone}
+                          </div>
+                        )}
+                        {o.paymentSlipUrl && (
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-950/90 border border-emerald-700/60 text-[10px] font-bold text-emerald-300">
+                              {o.paymentSlipUrl.toLowerCase().endsWith('.pdf') ? '📄 PDF Slip' : '🧾 Bank Slip'}
+                            </span>
+                            {o.transferRemark && (
+                              <span className="text-[10px] text-slate-400 truncate max-w-[140px]" title={`Remark: ${o.transferRemark}`}>
+                                Remark: <strong className="text-slate-200">{o.transferRemark}</strong>
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Destination */}

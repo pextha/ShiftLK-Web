@@ -113,11 +113,34 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </span>
       </nav>
 
+      {/* Mobile Product Header (shown right at the top on mobile screens before the image) */}
+      <div className="lg:hidden space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-xs text-brand-neon bg-brand-neon/10 border border-brand-neon/30 px-2.5 py-0.5 rounded-lg">
+            {product.brand}
+          </span>
+          <span className="font-mono text-xs text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-lg">
+            OEM: {product.part_number}
+          </span>
+        </div>
+        <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+          {product.name}
+        </h1>
+      </div>
+
       {/* Main Product Showcase Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-        {/* Left Column: Image Gallery (7 cols on lg) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
+        {/* Left Column: Image Gallery + Specs (7 cols on lg) */}
         <div className="lg:col-span-7 space-y-6">
           <ProductGallery images={product.images} productName={product.name} />
+
+          {/* Mobile Order Summary (shown immediately below the image on mobile so social media visitors don't have to scroll past long descriptions to buy!) */}
+          <div className="lg:hidden">
+            <LiveOrderSummary
+              product={product}
+              deliveryZones={deliveryZones}
+            />
+          </div>
 
           {/* Product Specifications & Full Description */}
           <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
@@ -213,8 +236,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
         {/* Right Column: Order Calculation & WhatsApp Gateway (5 cols on lg) */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Header Info */}
-          <div className="space-y-2.5">
+          {/* Header Info (Desktop) */}
+          <div className="hidden lg:block space-y-2.5">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-xs text-brand-neon bg-brand-neon/10 border border-brand-neon/30 px-2.5 py-1 rounded-lg">
                 {product.brand}
@@ -229,11 +252,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             </h1>
           </div>
 
-          {/* Live Order Summary & District Calculation Card */}
-          <LiveOrderSummary
-            product={product}
-            deliveryZones={deliveryZones}
-          />
+          {/* Live Order Summary & District Calculation Card (Desktop) */}
+          <div className="hidden lg:block">
+            <LiveOrderSummary
+              product={product}
+              deliveryZones={deliveryZones}
+            />
+          </div>
 
           {/* Direct WhatsApp Fitment Inquiries Box */}
           <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 space-y-3">

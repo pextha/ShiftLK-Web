@@ -1,7 +1,14 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../middlewares/auth';
 import { validateBody } from '../../middlewares/validate';
-import { createProductSchema, updateProductSchema, stockAdjustmentSchema } from './admin.products.schema';
+import {
+  createProductSchema,
+  updateProductSchema,
+  stockAdjustmentSchema,
+  restockProductSchema,
+  inlineStockSchema,
+  bulkProductsSchema,
+} from './admin.products.schema';
 import * as adminProductsController from './admin.products.controller';
 
 const router = Router();
@@ -13,7 +20,7 @@ router.use(requireRole(['ADMIN', 'STAFF']));
 router.get('/stock/overview', adminProductsController.getStockOverview);
 router.get('/stock/movements', adminProductsController.getStockMovements);
 router.get('/export-csv', adminProductsController.exportProductsCsv);
-router.post('/bulk', adminProductsController.bulkProductsAction);
+router.post('/bulk', validateBody(bulkProductsSchema), adminProductsController.bulkProductsAction);
 
 // CRUD
 router.get('/', adminProductsController.getAdminProducts);
@@ -23,8 +30,8 @@ router.put('/:id', validateBody(updateProductSchema), adminProductsController.up
 router.delete('/:id', requireRole(['ADMIN']), adminProductsController.deleteProduct);
 
 // Stock Actions
-router.post('/:id/restock', adminProductsController.restockProduct);
-router.patch('/:id/stock', adminProductsController.inlineStockAdjustment);
+router.post('/:id/restock', validateBody(restockProductSchema), adminProductsController.restockProduct);
+router.patch('/:id/stock', validateBody(inlineStockSchema), adminProductsController.inlineStockAdjustment);
 router.post('/:id/stock', validateBody(stockAdjustmentSchema), adminProductsController.adjustStock);
 
 export default router;

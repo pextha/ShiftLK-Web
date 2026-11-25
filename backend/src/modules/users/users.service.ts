@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../middlewares/errorHandler';
+import { bumpUserTokenVersion } from '../../middlewares/auth';
 
 export class UsersService {
   async getAllUsers() {
@@ -56,6 +57,10 @@ export class UsersService {
       throw new AppError('USER_NOT_FOUND', 'User not found', 404);
     }
 
+    if (!isActive) {
+      bumpUserTokenVersion(id);
+    }
+
     return prisma.user.update({
       where: { id },
       data: { isActive },
@@ -76,6 +81,7 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
+    bumpUserTokenVersion(id);
 
     return prisma.user.update({
       where: { id },

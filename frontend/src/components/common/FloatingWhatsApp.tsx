@@ -26,7 +26,7 @@ export default function FloatingWhatsApp() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-3">
       {/* Tooltip bubble on desktop */}
       <div
         className={`hidden sm:flex items-center bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-xl border border-slate-700 transition-all duration-200 pointer-events-none ${
@@ -46,13 +46,13 @@ export default function FloatingWhatsApp() {
         rel="noopener noreferrer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="relative flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white rounded-full shadow-2xl shadow-emerald-950/60 transition-transform duration-200 hover:scale-110 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-emerald-500/30"
+        className="relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-tr from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white rounded-full shadow-2xl shadow-emerald-950/60 transition-transform duration-200 hover:scale-110 active:scale-95 group focus:outline-none focus:ring-4 focus:ring-emerald-500/30"
         aria-label="Contact us on WhatsApp"
       >
         {/* Pulsing ring */}
         <span className="absolute -inset-1 rounded-full bg-emerald-500 opacity-40 group-hover:animate-ping -z-10" />
 
-        <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
+        <WhatsAppIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white fill-current" />
 
         {/* Online status badge */}
         <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-brand-neon border-2 border-slate-950 rounded-full shadow-sm shadow-brand-neon" />

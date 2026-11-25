@@ -2,17 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
 import { getCookieOptions, getClearCookieOptions } from '../../utils/cookies';
 import { auditService } from '../audit/audit.service';
+import { revokeToken } from '../../middlewares/auth';
 
 const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000; // 15 mins
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { email, password } = req.body;
-  const rawIp =
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() ||
-    req.ip ||
-    req.socket.remoteAddress ||
-    '127.0.0.1';
+  // Uses Express trusted proxy IP (`app.set('trust proxy', 1)`)
+  const rawIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
   const clientIp = rawIp.replace(/^::ffff:/, '');
 
   try {
@@ -64,6 +62,7 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
 
     const result = await authService.refreshToken(token);
     res.cookie('access_token', result.accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
+    res.cookie('refresh_token', result.refreshToken, getCookieOptions(REFRESH_TOKEN_MAX_AGE));
 
     res.json({
       data: {
@@ -77,6 +76,9 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
 }
 
 export async function logout(req: Request, res: Response): Promise<void> {
+  revokeToken(req.cookies?.access_token);
+  revokeToken(req.cookies?.refresh_token);
+
   const clearOptions = getClearCookieOptions();
   res.clearCookie('access_token', clearOptions);
   res.clearCookie('refresh_token', clearOptions);

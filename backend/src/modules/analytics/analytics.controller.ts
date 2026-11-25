@@ -3,7 +3,8 @@ import { analyticsService } from './analytics.service';
 
 export async function getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await analyticsService.getOverview(req.user?.role);
+    const period = (req.query.period as 'daily' | 'weekly' | 'monthly' | 'all') || 'all';
+    const result = await analyticsService.getOverview(req.user?.role, period);
     res.json({ data: result });
   } catch (error) {
     next(error);
@@ -42,10 +43,11 @@ export async function getLowStock(req: Request, res: Response, next: NextFunctio
 
 export async function getReports(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { period, startDate, endDate } = req.query;
+    const { period, month, startDate, endDate } = req.query;
     const result = await analyticsService.getReports(
       {
         period: period as any,
+        month: month as string,
         startDate: startDate as string,
         endDate: endDate as string,
       },

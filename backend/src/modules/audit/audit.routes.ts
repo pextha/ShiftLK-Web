@@ -5,7 +5,7 @@ import * as auditController from './audit.controller';
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole(['SUPER_ADMIN', 'ADMIN']));
+router.use(requireRole(['ADMIN']));
 
 router.get('/', auditController.getAuditLogs);
 

@@ -17,10 +17,14 @@ export interface CreateOrderInput {
   }>;
   customerName: string;
   phone: string;
+  secondaryPhone?: string;
   address: string;
   district: string;
   notes?: string;
   locale: AppLocale;
+  reservationId?: string;
+  paymentSlipUrl?: string;
+  transferRemark?: string;
   originUrl?: string;
 }
 
@@ -44,10 +48,14 @@ export async function createPendingOrder(
     items,
     customerName,
     phone,
+    secondaryPhone,
     address,
     district,
     notes,
     locale,
+    reservationId,
+    paymentSlipUrl,
+    transferRemark,
     originUrl,
   } = input;
 
@@ -84,15 +92,31 @@ export async function createPendingOrder(
     };
   }
 
+  let cleanSecondaryPhone: string | undefined = undefined;
+  if (secondaryPhone && secondaryPhone.trim().length > 0) {
+    const secValidation = validateSriLankanPhone(secondaryPhone.trim());
+    if (!secValidation.isValid) {
+      return {
+        success: false,
+        error: secValidation.error || 'Invalid secondary Sri Lankan phone number',
+      };
+    }
+    cleanSecondaryPhone = secValidation.cleanNumber;
+  }
+
   // 2. Try placing order on the ShiftLK Backend REST API (shiftLK-api)
   try {
     const apiRes = await apiClient.createOrder({
       customerName: customerName.trim(),
       phone: phoneValidation.cleanNumber,
+      secondaryPhone: cleanSecondaryPhone,
       address: address.trim(),
       district: district.trim(),
       notes: notes?.trim(),
       locale,
+      reservationId,
+      paymentSlipUrl,
+      transferRemark: (transferRemark || customerName).trim(),
       items: normalizedItems,
     });
 

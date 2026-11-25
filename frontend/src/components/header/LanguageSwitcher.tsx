@@ -40,7 +40,7 @@ export default function LanguageSwitcher() {
         type="button"
         onClick={() => handleLocaleChange('en')}
         disabled={isPending}
-        className={`px-2.5 py-1 text-xs rounded-full transition-all duration-150 cursor-pointer ${
+        className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs rounded-full transition-all duration-150 cursor-pointer ${
           locale === 'en'
             ? 'bg-[#ccff00] text-black shadow-md font-black'
             : 'text-slate-300 hover:text-white hover:bg-slate-850 font-medium'
@@ -53,7 +53,7 @@ export default function LanguageSwitcher() {
         type="button"
         onClick={() => handleLocaleChange('si')}
         disabled={isPending}
-        className={`px-2.5 py-1 text-xs rounded-full transition-all duration-150 cursor-pointer ${
+        className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs rounded-full transition-all duration-150 cursor-pointer ${
           locale === 'si'
             ? 'bg-[#ccff00] text-black shadow-md font-black'
             : 'text-slate-300 hover:text-white hover:bg-slate-850 font-medium'
@@ -66,7 +66,7 @@ export default function LanguageSwitcher() {
         type="button"
         onClick={() => handleLocaleChange('ta')}
         disabled={isPending}
-        className={`px-2.5 py-1 text-xs rounded-full transition-all duration-150 cursor-pointer ${
+        className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs rounded-full transition-all duration-150 cursor-pointer ${
           locale === 'ta'
             ? 'bg-[#ccff00] text-black shadow-md font-black'
             : 'text-slate-300 hover:text-white hover:bg-slate-850 font-medium'

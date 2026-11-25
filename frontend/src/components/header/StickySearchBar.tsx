@@ -48,8 +48,8 @@ export default function StickySearchBar({
               : 'border-slate-800 hover:border-slate-600'
           }`}
         >
-          <div className="pl-3.5 pr-2 text-brand-neon flex items-center pointer-events-none">
-            <Search className="w-5 h-5" />
+          <div className="pl-3 pr-1.5 sm:pl-3.5 sm:pr-2 text-brand-neon flex items-center pointer-events-none">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
 
           <input
@@ -59,7 +59,7 @@ export default function StickySearchBar({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 250)}
             placeholder={t('placeholder')}
-            className="w-full bg-transparent py-3 text-sm md:text-base text-slate-100 placeholder-slate-400 focus:outline-none"
+            className="w-full bg-transparent py-2.5 sm:py-3 text-xs sm:text-sm md:text-base text-slate-100 placeholder-slate-400 focus:outline-none"
             aria-label="Search spare parts"
           />
 
@@ -76,9 +76,10 @@ export default function StickySearchBar({
 
           <button
             type="submit"
-            className="hidden sm:inline-flex items-center gap-1.5 bg-[#ccff00] hover:bg-[#b8e600] text-black px-5 py-3 text-sm font-black transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 whitespace-nowrap"
+            aria-label={t('searchBtn')}
+            className="inline-flex items-center justify-center gap-1.5 bg-[#ccff00] hover:bg-[#b8e600] text-black px-3.5 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 whitespace-nowrap"
           >
-            <span>{t('searchBtn')}</span>
+            <span className="hidden sm:inline">{t('searchBtn')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

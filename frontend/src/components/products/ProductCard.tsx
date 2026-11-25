@@ -10,16 +10,14 @@ import {
   isLocalOrUnoptimizedImage,
   DEFAULT_PRODUCT_PLACEHOLDER,
 } from '@/lib/utils/image';
-import { useCart } from '@/lib/cart-context';
 import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
   Bike,
   ChevronRight,
-  ShoppingCart,
+  Zap,
 } from 'lucide-react';
-import WhatsAppIcon from '@/components/common/WhatsAppIcon';
 import Image from 'next/image';
 
 interface ProductCardProps {
@@ -32,7 +30,6 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
   const t = useTranslations('product');
   const tFilters = useTranslations('filters');
   const tCommon = useTranslations('common');
-  const { addItem } = useCart();
   const [imgError, setImgError] = useState(false);
 
   const isOutOfStock = product.stock_qty <= 0;
@@ -100,7 +97,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
           ) : isLowStock ? (
             <span className="inline-flex items-center gap-1 bg-amber-950/90 text-amber-300 border border-amber-700/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
               <AlertTriangle className="w-3 h-3" />
-              <span>Only {product.stock_qty} Left</span>
+              <span>{t('lowStock', { qty: product.stock_qty })}</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 bg-emerald-950/90 text-emerald-300 border border-emerald-700/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
@@ -150,7 +147,7 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
         <div className="mt-auto pt-3 border-t border-[#1c2436] flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              Selling Price
+              {t('pricePerUnit')}
             </div>
             <div className="text-base sm:text-lg font-black text-white whitespace-nowrap">
               {formatLKR(product.selling_price, locale)}
@@ -158,18 +155,6 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {!isOutOfStock && (
-              <button
-                type="button"
-                onClick={() => addItem(product, 1, true)}
-                className="inline-flex items-center justify-center p-2 rounded-xl bg-[#141b2b] hover:bg-[#ccff00] hover:text-black border border-[#212c42] text-[#ccff00] transition-all cursor-pointer"
-                title="Add to Cart"
-                aria-label="Add to Cart"
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </button>
-            )}
-
             <Link
               href={`/products/${product.slug}`}
               className="inline-flex items-center justify-center p-2 rounded-xl bg-[#141b2b] hover:bg-[#ccff00] hover:text-black border border-[#212c42] text-slate-200 text-xs font-bold transition-all"
@@ -184,27 +169,27 @@ export default function ProductCard({ product, onQuickOrder }: ProductCardProps)
                 type="button"
                 onClick={() => onQuickOrder(product)}
                 disabled={isOutOfStock}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
                   isOutOfStock
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-[#25D366] hover:bg-[#20ba59] text-black shadow-md shadow-emerald-950/40 cursor-pointer active:scale-95'
+                    : 'bg-[#ccff00] hover:bg-[#d8ff33] text-black shadow-md shadow-[#ccff00]/15 cursor-pointer active:scale-95'
                 }`}
-                title="Order via WhatsApp"
+                title={t('buyNow')}
               >
-                <WhatsAppIcon className="w-3.5 h-3.5 text-black shrink-0" />
-                <span>Order</span>
+                <Zap className="w-3.5 h-3.5 text-black shrink-0 fill-black" />
+                <span>{t('buyNow')}</span>
               </button>
             ) : (
               <Link
                 href={`/products/${product.slug}`}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
                   isOutOfStock
                     ? 'bg-slate-800 text-slate-500'
-                    : 'bg-[#25D366] hover:bg-[#20ba59] text-black shadow-md shadow-emerald-950/40'
+                    : 'bg-[#ccff00] hover:bg-[#d8ff33] text-black shadow-md shadow-[#ccff00]/15'
                 }`}
               >
-                <WhatsAppIcon className="w-3.5 h-3.5 text-black shrink-0" />
-                <span>Order</span>
+                <Zap className="w-3.5 h-3.5 text-black shrink-0 fill-black" />
+                <span>{t('buyNow')}</span>
               </Link>
             )}
           </div>

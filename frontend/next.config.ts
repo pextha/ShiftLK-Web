@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   reactStrictMode: false,
   experimental: {
+    turbopackFileSystemCacheForDev: false,
     optimizePackageImports: [
       "lucide-react",
       "recharts",
@@ -30,7 +31,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "**.shiftlk.lk",
+      },
+      {
+        protocol: "https",
+        hostname: "**.r2.dev",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
       },
       {
         protocol: "http",
@@ -42,13 +51,32 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL
-      ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, '').replace('http://localhost:', 'http://127.0.0.1:')
-      : 'http://127.0.0.1:4000';
+  async headers() {
     return [
       {
-        source: '/api/v1/:path*',
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL
+      ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "").replace(
+          "http://localhost:",
+          "http://127.0.0.1:"
+        )
+      : "http://127.0.0.1:4000";
+    return [
+      {
+        source: "/api/v1/:path*",
         destination: `${backendUrl}/api/v1/:path*`,
       },
     ];

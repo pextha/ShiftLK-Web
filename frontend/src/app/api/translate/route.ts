@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const MAX_TRANSLATE_LENGTH = 2000;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 60;
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
+
 async function googleTranslateFree(text: string, targetLang: 'si' | 'ta'): Promise<string | null> {
   if (!text.trim()) return '';
   try {
@@ -30,8 +50,32 @@ async function googleTranslateFree(text: string, targetLang: 'si' | 'ta'): Promi
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Require admin session cookie (access_token or refresh_token)
+    const accessToken = req.cookies.get('access_token')?.value;
+    const refreshToken = req.cookies.get('refresh_token')?.value;
+    if (!accessToken && !refreshToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // 2. Per-IP rate limiting
+    const clientIp =
+      req.headers.get('cf-connecting-ip') ||
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      '127.0.0.1';
+    if (!checkRateLimit(clientIp)) {
+      return NextResponse.json(
+        { error: 'Too many translation requests. Please wait a moment.' },
+        { status: 429 }
+      );
+    }
+
+    // 3. Enforce max input length
     const body = await req.json();
-    const text = typeof body?.text === 'string' ? body.text.trim() : '';
+    const rawText = typeof body?.text === 'string' ? body.text.trim() : '';
+    const text = rawText.slice(0, MAX_TRANSLATE_LENGTH);
     if (!text) {
       return NextResponse.json({ si: '', ta: '' });
     }
@@ -49,4 +93,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ si: null, ta: null }, { status: 200 });
   }
 }
-
